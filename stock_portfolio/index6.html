@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Stock Portfolio Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f9fafb 0%, #e0e7ff 100%);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .metric-card {
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13);
+        }
+
+        .positive {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .dark-mode {
+            background: linear-gradient(135deg, #18181b 0%, #312e81 100%) !important;
+            color: #e0e7ef !important;
+        }
+
+        .dark-mode .metric-card,
+        .dark-mode .bg-white {
+            background: #232946 !important;
+            color: #e0e7ef !important;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        .dark-mode .positive {
+            background: #134e4a !important;
+            color: #6ee7b7 !important;
+        }
+
+        .dark-mode .negative {
+            background: #7f1d1d !important;
+            color: #fecaca !important;
+        }
+
+        .dark-mode table {
+            background: #18181b !important;
+            color: #e0e7ef !important;
+        }
+
+        .dark-mode th,
+        .dark-mode td {
+            border-color: #232946 !important;
+        }
+
+        .dark-mode .bg-gray-100,
+        .dark-mode .bg-gray-50 {
+            background: #232946 !important;
+        }
+
+        .dark-mode .text-gray-500,
+        .dark-mode .text-gray-600,
+        .dark-mode .text-gray-700 {
+            color: #a5b4fc !important;
+        }
+
+        .dark-mode .text-blue-700 {
+            color: #60a5fa !important;
+        }
+
+        .dark-mode .text-green-700 {
+            color: #6ee7b7 !important;
+        }
+
+        .dark-mode .text-red-700 {
+            color: #fecaca !important;
+        }
+
+        .dark-mode .text-blue-600 {
+            color: #818cf8 !important;
+        }
+
+        .dark-mode .shadow {
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.35) !important;
+        }
+
+        .dark-toggle {
+            cursor: pointer;
+            background: #fff;
+            border-radius: 9999px;
+            padding: 0.5rem 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .dark-toggle:hover {
+            background: #e0e7ff;
+        }
+
+        .dark-mode .dark-toggle {
+            background: #232946;
+            color: #e0e7ef;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+        }
+
+        .fade-in {
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen p-6">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between fade-in"
+            style="background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%); border-radius: 1rem; padding: 1.5rem 2rem; box-shadow: 0 4px 24px rgba(99,102,241,0.13);">
+            <div class="flex flex-col gap-2 md:gap-0 md:flex-row md:items-center">
+                <h1 class="text-3xl font-bold mb-2 md:mb-0 text-white flex items-center gap-2">
+                    <span>📈</span> My Stock Portfolio Dashboard
+                </h1>
+                <span class="ml-3 text-lg font-semibold text-blue-100 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                        <circle cx="10" cy="10" r="10" />
+                    </svg>
+                    Viom Kapur
+                </span>
+            </div>
+            <div class="flex items-center gap-4 mt-4 md:mt-0">
+                <a href="https://kyupralis24.github.io/portfolio/" target="_blank"
+                    class="transition-all duration-200 bg-white text-indigo-700 font-bold px-5 py-2 rounded-full shadow hover:bg-indigo-600 hover:text-white flex items-center gap-2 border-2 border-indigo-200 hover:border-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    title="View my Resume Portfolio">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                    Resume Portfolio
+                </a>
+                <a href="https://www.linkedin.com/in/viom-kapur-93434621b/" target="_blank"
+                    class="text-blue-100 hover:underline font-semibold">LinkedIn</a>
+                <button id="darkModeToggle" class="dark-toggle" title="Toggle dark mode">
+                    <svg id="darkIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.07l-.71.71M21 12h-1M4 12H3m16.66 5.66l-.71-.71M4.05 4.93l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg id="lightIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <div class="mb-8 text-center fade-in">
+            <p class="text-lg text-indigo-900 dark:text-indigo-200 font-medium">Welcome to Viom Kapur's personalized
+                investment dashboard. Track, analyze, and grow your portfolio with confidence! 🚀</p>
+        </div>
+
+        <!-- Top Metrics -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="topMetrics">
+            <!-- JS will populate -->
+        </section>
+
+        <!-- Insights -->
+        <section class="mb-8" id="insights">
+            <!-- JS will populate -->
+        </section>
+
+        <!-- Investments Table -->
+        <section class="mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4">All Investments</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm" id="investmentsTable">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="p-2">Symbol</th>
+                                <th class="p-2">Buy Price</th>
+                                <th class="p-2">Current Price</th>
+                                <th class="p-2">Quantity</th>
+                                <th class="p-2">Total Investment</th>
+                                <th class="p-2">Current Value</th>
+                                <th class="p-2">Profit/Loss</th>
+                                <th class="p-2">Sector</th>
+                                <th class="p-2">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="investmentsBody">
+                            <!-- JS will populate -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold mb-4">Stock Performance</h2>
+                <canvas id="stockPerformanceChart" height="200"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold mb-4">Sector Allocation</h2>
+                <canvas id="sectorChart" height="200"></canvas>
+            </div>
+        </section>
+
+        <!-- Strategy -->
+        <section class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-lg font-semibold mb-2">My Investment Strategy</h2>
+            <p class="text-gray-600">I focus on data-driven, diversified, and long-term investments in the Indian
+                market, prioritizing strong fundamentals and sectoral trends. I regularly review my portfolio for risk
+                and growth opportunities.</p>
+        </section>
+    </div>
+
+    <script>
+        // Google Sheets App Script endpoint
+        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwAgjKwdEvADx4miJw_1ZzJsHXKdj7UYc3T-tA_CErMHvLsDZETH07yeqXT9F-dl_ssDA/exec';
+
+        async function fetchPortfolio() {
+            const res = await fetch(SHEET_URL);
+            if (!res.ok) throw new Error('Failed to fetch portfolio data');
+            return await res.json();
+        }
+
+        function formatINR(num) {
+            return '₹' + Number(num).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        function getPLClass(val) {
+            return parseFloat(val) >= 0 ? 'positive' : 'negative';
+        }
+
+        function calcInsights(data) {
+            // Best and worst performing stock
+            let best = null, worst = null;
+            data.forEach(item => {
+                if (!best || parseFloat(item['Profit/Loss']) > parseFloat(best['Profit/Loss'])) best = item;
+                if (!worst || parseFloat(item['Profit/Loss']) < parseFloat(worst['Profit/Loss'])) worst = item;
+            });
+            // Sector with highest allocation
+            const sectorMap = {};
+            data.forEach(item => {
+                const sector = item.Sector || 'Unknown';
+                sectorMap[sector] = (sectorMap[sector] || 0) + (parseFloat(item['Current Value']) || 0);
+            });
+            const topSector = Object.entries(sectorMap).sort((a, b) => b[1] - a[1])[0];
+            return { best, worst, topSector };
+        }
+
+        function renderTopMetrics(totalInvested, totalValue, totalPL) {
+            document.getElementById('topMetrics').innerHTML = `
+            <div class="metric-card bg-white rounded-lg p-6 flex flex-col items-center">
+                <span class="text-gray-500">Total Invested Value</span>
+                <span class="text-2xl font-bold mt-2">${formatINR(totalInvested)}</span>
+            </div>
+            <div class="metric-card bg-white rounded-lg p-6 flex flex-col items-center">
+                <span class="text-gray-500">Total Portfolio Value</span>
+                <span class="text-2xl font-bold mt-2">${formatINR(totalValue)}</span>
+            </div>
+            <div class="metric-card bg-white rounded-lg p-6 flex flex-col items-center ${getPLClass(totalPL)}">
+                <span class="text-gray-500">Total Profit/Loss</span>
+                <span class="text-2xl font-bold mt-2">${formatINR(totalPL)}</span>
+            </div>
+        `;
+        }
+
+        function renderInvestmentsTable(data) {
+            document.getElementById('investmentsBody').innerHTML = data.map(item => {
+                const buyPrice = Number(item['Buy Price ']);
+                const currentPrice = Number(item['Current Price']);
+                const quantity = item['Quantity'] !== undefined && item['Quantity'] !== '' ? item['Quantity'] : '';
+                const totalInvestment = Number(item['Total Investment']);
+                const currentValue = Number(item['Current Value ']);
+                const profitLoss = Number(item['Profit/Loss']);
+                return `
+                <tr>
+                    <td class="p-2">${item.Symbol || ''}</td>
+                    <td class="p-2">${!isNaN(buyPrice) && buyPrice !== 0 ? formatINR(buyPrice) : ''}</td>
+                    <td class="p-2">${!isNaN(currentPrice) && currentPrice !== 0 ? formatINR(currentPrice) : ''}</td>
+                    <td class="p-2">${quantity}</td>
+                    <td class="p-2">${!isNaN(totalInvestment) && totalInvestment !== 0 ? formatINR(totalInvestment) : ''}</td>
+                    <td class="p-2">${!isNaN(currentValue) && currentValue !== 0 ? formatINR(currentValue) : ''}</td>
+                    <td class="p-2 ${getPLClass(profitLoss)}">${!isNaN(profitLoss) && profitLoss !== 0 ? formatINR(profitLoss) : ''}</td>
+                    <td class="p-2">${item['Sector '] || ''}</td>
+                    <td class="p-2">${item.Date || ''}</td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        function renderInsights(insights) {
+            document.getElementById('insights').innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg p-4">
+                    <div class="text-gray-500 mb-1">Best Performer</div>
+                    <div class="font-bold">${insights.best.Symbol}</div>
+                    <div class="text-green-700">${formatINR(insights.best['Profit/Loss'])}</div>
+                </div>
+                <div class="bg-white rounded-lg p-4">
+                    <div class="text-gray-500 mb-1">Worst Performer</div>
+                    <div class="font-bold">${insights.worst.Symbol}</div>
+                    <div class="text-red-700">${formatINR(insights.worst['Profit/Loss'])}</div>
+                </div>
+                <div class="bg-white rounded-lg p-4">
+                    <div class="text-gray-500 mb-1">Top Sector</div>
+                    <div class="font-bold">${insights.topSector[0]}</div>
+                    <div class="text-blue-700">${formatINR(insights.topSector[1])}</div>
+                </div>
+            </div>
+        `;
+        }
+
+        function renderStockPerformanceChart(data) {
+            const ctx = document.getElementById('stockPerformanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(i => i.Symbol),
+                    datasets: [{
+                        label: 'Profit/Loss',
+                        data: data.map(i => i['Profit/Loss']),
+                        backgroundColor: data.map(i => parseFloat(i['Profit/Loss']) >= 0 ? '#34d399' : '#f87171'),
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: v => formatINR(v) } }
+                    }
+                }
+            });
+        }
+
+        function renderSectorChart(data) {
+            const ctx = document.getElementById('sectorChart').getContext('2d');
+            const sectorMap = {};
+            data.forEach(item => {
+                const sector = item['Sector '] || 'Unknown';
+                const currentValue = Number(item['Current Value ']) || 0;
+                sectorMap[sector] = (sectorMap[sector] || 0) + currentValue;
+            });
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(sectorMap),
+                    datasets: [{
+                        data: Object.values(sectorMap),
+                        backgroundColor: ['#60a5fa', '#fbbf24', '#34d399', '#f87171', '#a78bfa', '#f472b6', '#facc15'],
+                    }]
+                },
+                options: {
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        async function main() {
+            try {
+                const data = await fetchPortfolio();
+                // Use summary row for top metrics (with correct field names)
+                const summary = data[0];
+                const rows = data;
+                const totalInvested = Number(summary['Total Invested Value ']) || 0;
+                const totalValue = Number(summary['Total Portfolio Value ']) || 0;
+                const totalPL = Number(summary['Total Profit/Loss']) || 0;
+                renderTopMetrics(totalInvested, totalValue, totalPL);
+                renderInvestmentsTable(rows);
+                renderStockPerformanceChart(rows);
+                renderSectorChart(rows);
+                renderInsights(calcInsights(rows));
+            } catch (e) {
+                document.body.innerHTML = `<div class='text-center text-red-600 mt-20'>Failed to load portfolio data.<br>${e.message}</div>`;
+            }
+        }
+        main();
+
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const darkIcon = document.getElementById('darkIcon');
+        const lightIcon = document.getElementById('lightIcon');
+        function setDarkMode(enabled) {
+            if (enabled) {
+                document.body.classList.add('dark-mode');
+                darkIcon.classList.add('hidden');
+                lightIcon.classList.remove('hidden');
+            } else {
+                document.body.classList.remove('dark-mode');
+                darkIcon.classList.remove('hidden');
+                lightIcon.classList.add('hidden');
+            }
+            // Update Chart.js chart colors
+            Chart.helpers.each(Chart.instances, function (instance) {
+                if (instance.options && instance.options.plugins && instance.options.plugins.legend) {
+                    instance.options.plugins.legend.labels.color = enabled ? '#e0e7ef' : '#1f2937';
+                }
+                if (instance.options && instance.options.scales) {
+                    Object.values(instance.options.scales).forEach(scale => {
+                        if (scale.ticks) scale.ticks.color = enabled ? '#e0e7ef' : '#1f2937';
+                    });
+                }
+                instance.update();
+            });
+        }
+        darkModeToggle.addEventListener('click', () => {
+            const enabled = !document.body.classList.contains('dark-mode');
+            setDarkMode(enabled);
+            localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
+        });
+        // On load, set dark mode if previously enabled
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            setDarkMode(true);
+        }
+    </script>
+</body>
+
+</html>
