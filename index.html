@@ -689,18 +689,6 @@
                         <th class="p-2">Profit/Loss</th>
                         <th class="p-2">Sector</th>
                         <th class="p-2">Date</th>
-                        <th class="p-2">Price</th>
-                        <th class="p-2">Price Open</th>
-                        <th class="p-2">Volume</th>
-                        <th class="p-2">Market Cap</th>
-                        <th class="p-2">P/E</th>
-                        <th class="p-2">EPS</th>
-                        <th class="p-2">High 52</th>
-                        <th class="p-2">Low 52</th>
-                        <th class="p-2">Change</th>
-                        <th class="p-2">Beta</th>
-                        <th class="p-2">Change %</th>
-                        <th class="p-2">Close Yesterday</th>
                     </tr>
                 </thead>
                 <tbody id="investmentsBody">
@@ -722,18 +710,6 @@
                                 <td class="p-2 ${getPLClass(profitLoss)}">${!isNaN(profitLoss) && profitLoss !== 0 ? formatINR(profitLoss) : ''}</td>
                                 <td class="p-2">${item['Sector '] || ''}</td>
                                 <td class="p-2">${item.Date || ''}</td>
-                                <td class="p-2">${item.Price || ''}</td>
-                                <td class="p-2">${item['Price Open'] || ''}</td>
-                                <td class="p-2">${item.Volume || ''}</td>
-                                <td class="p-2">${item['Market Cap'] || ''}</td>
-                                <td class="p-2">${item['P/E'] || ''}</td>
-                                <td class="p-2">${item.EPS || ''}</td>
-                                <td class="p-2">${item['High 52'] || ''}</td>
-                                <td class="p-2">${item['Low 52'] || ''}</td>
-                                <td class="p-2">${item.Change || ''}</td>
-                                <td class="p-2">${item.Beta || ''}</td>
-                                <td class="p-2">${item['Change %'] || ''}</td>
-                                <td class="p-2">${item['Close Yesterday'] || ''}</td>
                             </tr>
                         `;
             }).join('')}
