@@ -7,6 +7,9 @@
     <title>My Stock Portfolio Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.9/babel.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -17,6 +20,7 @@
         .metric-card {
             box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
             transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
         }
 
         .metric-card:hover {
@@ -132,6 +136,68 @@
                 opacity: 1;
             }
         }
+
+        .tooltip {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            color: #1f2937;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .metric-card:hover .tooltip {
+            display: block;
+        }
+
+        .dark-mode .tooltip {
+            background: #232946;
+            color: #e0e7ef;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+        }
+
+        .stock-tooltip {
+            display: none;
+            position: absolute;
+            background: #fff;
+            color: #1f2937;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            z-index: 20;
+            font-size: 0.85rem;
+            width: 200px;
+        }
+
+        .symbol-cell:hover .stock-tooltip {
+            display: block;
+        }
+
+        .dark-mode .stock-tooltip {
+            background: #232946;
+            color: #e0e7ef;
+        }
+
+        canvas.price-range-chart {
+            height: 40px !important;
+            width: 150px !important;
+            margin: 0 auto;
+        }
     </style>
 </head>
 
@@ -190,28 +256,30 @@
             <!-- JS will populate -->
         </section>
 
-        <!-- Investments Table -->
+        <!-- Risk Metrics -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" id="riskMetrics">
+            <!-- JS will populate -->
+        </section>
+
+        <!-- Investments Table with Screener -->
         <section class="mb-8">
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-xl font-semibold mb-4">All Investments</h2>
+                <div class="mb-4 flex flex-col md:flex-row gap-4">
+                    <div>
+                        <label for="sectorFilter" class="text-gray-600 mr-2">Filter by Sector:</label>
+                        <select id="sectorFilter" class="border rounded p-2 text-gray-700">
+                            <option value="">All Sectors</option>
+                            <!-- JS will populate -->
+                        </select>
+                    </div>
+                    <button id="sortProfitLoss" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+                        Sort by Profit/Loss (Asc)
+                    </button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm" id="investmentsTable">
-                        <thead>
-                            <tr class="bg-gray-100">
-                                <th class="p-2">Symbol</th>
-                                <th class="p-2">Buy Price</th>
-                                <th class="p-2">Current Price</th>
-                                <th class="p-2">Quantity</th>
-                                <th class="p-2">Total Investment</th>
-                                <th class="p-2">Current Value</th>
-                                <th class="p-2">Profit/Loss</th>
-                                <th class="p-2">Sector</th>
-                                <th class="p-2">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="investmentsBody">
-                            <!-- JS will populate -->
-                        </tbody>
+                        <!-- JS will populate -->
                     </table>
                 </div>
             </div>
@@ -236,18 +304,96 @@
                 market, prioritizing strong fundamentals and sectoral trends. I regularly review my portfolio for risk
                 and growth opportunities.</p>
         </section>
+
+        <!-- Stock Analysis Insights (React Component) -->
+        <section class="mb-8" id="stockAnalysisSection">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4">Stock Analysis Insights</h2>
+                <div id="stockAnalysisReact" class="overflow-x-auto"></div>
+            </div>
+        </section>
+
+        <!-- Understanding the Metrics -->
+        <section class="mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4">Understanding the Metrics</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-gray-700">P/E Ratio</h3>
+                        <p class="text-gray-600">
+                            <strong>Formula:</strong> Provided directly from the "Stock Details" sheet.<br>
+                            <strong>Explanation:</strong> The Price-to-Earnings (P/E) ratio measures a stock's price
+                            relative to its earnings per share (EPS). A lower P/E may indicate an undervalued stock,
+                            while a higher P/E could suggest growth expectations or overvaluation.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-gray-700">Volume Trend</h3>
+                        <p class="text-gray-600">
+                            <strong>Formula:</strong> Volume / Average Volume (assumed 100,000).<br>
+                            - High Activity: > 1.5<br>
+                            - Low Activity: < 0.5<br>
+                                - Normal Activity: Otherwise<br>
+                                <strong>Explanation:</strong> Compares the stock's trading volume to an assumed average.
+                                High volume may indicate strong interest or news, while low volume suggests lack of
+                                interest.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-gray-700">Change from High 52 (%)</h3>
+                        <p class="text-gray-600">
+                            <strong>Formula:</strong> (High 52 - Price) / High 52 × 100%.<br>
+                            <strong>Explanation:</strong> Shows how far the current price is below the 52-week high, as
+                            a percentage. A smaller percentage indicates the stock is closer to its yearly peak,
+                            suggesting potential resistance.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-gray-700">Change from Low 52 (%)</h3>
+                        <p class="text-gray-600">
+                            <strong>Formula:</strong> (Price - Low 52) / Low 52 × 100%.<br>
+                            <strong>Explanation:</strong> Shows how far the current price is above the 52-week low, as a
+                            percentage. A larger percentage indicates the stock has risen significantly from its yearly
+                            low, suggesting potential support.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-gray-700">Daily Change (₹)</h3>
+                        <p class="text-gray-600">
+                            <strong>Formula:</strong> Provided directly from the "Stock Details" sheet (Change = Price -
+                            Close Yesterday).<br>
+                            <strong>Explanation:</strong> The absolute change in the stock's price from the previous
+                            day's close. Positive values indicate a price increase, while negative values indicate a
+                            decrease.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-gray-700">Daily Change (%)</h3>
+                        <p class="text-gray-600">
+                            <strong>Formula:</strong> Provided directly from the "Stock Details" sheet.<br>
+                            <strong>Explanation:</strong> The percentage change in the stock's price from the previous
+                            day's close. It helps assess the stock's daily performance relative to its price.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-gray-700">Price Range (52-Week)</h3>
+                        <p class="text-gray-600">
+                            <strong>Formula:</strong> Visual representation using Low 52, Price, and High 52.<br>
+                            <strong>Explanation:</strong> A line chart showing the stock's price range over the past 52
+                            weeks. The blue line spans from the 52-week low to high, with a red triangle indicating the
+                            current price. Hover to see exact values.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
-    <script>
+    <script type="text/babel">
         // Google Sheets App Script endpoint
-        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwAgjKwdEvADx4miJw_1ZzJsHXKdj7UYc3T-tA_CErMHvLsDZETH07yeqXT9F-dl_ssDA/exec';
+        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxjoZEF_pqjuAL59l-3bAH2E2VD2eLi2IP6EHD34gQkYFmK5J5h8cRgDlSxeHLOIynPsA/exec';
 
-        async function fetchPortfolio() {
-            const res = await fetch(SHEET_URL);
-            if (!res.ok) throw new Error('Failed to fetch portfolio data');
-            return await res.json();
-        }
-
+        // Utility Functions
         function formatINR(num) {
             return '₹' + Number(num).toLocaleString('en-IN', { maximumFractionDigits: 2 });
         }
@@ -256,21 +402,230 @@
             return parseFloat(val) >= 0 ? 'positive' : 'negative';
         }
 
+        // Price Range Chart Component (Using Chart.js Bar Chart)
+        const PriceRangeChart = ({ low52, price, high52, index }) => {
+            const chartRef = React.useRef(null);
+            const chartInstanceRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if (chartInstanceRef.current) {
+                    chartInstanceRef.current.destroy();
+                }
+
+                const ctx = chartRef.current.getContext('2d');
+                const range = high52 - low52;
+                const pricePosition = range !== 0 ? (price - low52) / range * 100 : 0;
+
+                // Calculate rating (1-5)
+                const rating = Math.min(5, Math.max(1, (pricePosition / 100) * 5));
+                const fullIcons = Math.floor(rating);
+                const hasHalfIcon = rating % 1 >= 0.5;
+
+                // Get the current theme colors
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                const activeColor = isDarkMode ? '#818cf8' : '#60a5fa';
+                const inactiveColor = isDarkMode ? '#4b5563' : '#e5e7eb';
+
+                // Clear canvas
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+                // Draw rating
+                const barWidth = 40;
+                const barHeight = 8;
+                const spacing = 8;
+                const totalWidth = (barWidth + spacing) * 5 - spacing;
+                const startX = (ctx.canvas.width - totalWidth) / 2;
+                const centerY = ctx.canvas.height / 2;
+
+                // Draw background bars
+                for (let i = 0; i < 5; i++) {
+                    const x = startX + i * (barWidth + spacing);
+
+                    // Draw rounded rectangle
+                    ctx.beginPath();
+                    ctx.roundRect(x, centerY - barHeight / 2, barWidth, barHeight, 4);
+                    ctx.fillStyle = inactiveColor;
+                    ctx.fill();
+
+                    // Draw active portion
+                    if (i < fullIcons) {
+                        ctx.beginPath();
+                        ctx.roundRect(x, centerY - barHeight / 2, barWidth, barHeight, 4);
+                        ctx.fillStyle = activeColor;
+                        ctx.fill();
+                    } else if (i === fullIcons && hasHalfIcon) {
+                        ctx.beginPath();
+                        ctx.roundRect(x, centerY - barHeight / 2, barWidth / 2, barHeight, 4);
+                        ctx.fillStyle = activeColor;
+                        ctx.fill();
+                    }
+                }
+
+                return () => {
+                    if (chartInstanceRef.current) {
+                        chartInstanceRef.current.destroy();
+                    }
+                };
+            }, [low52, price, high52]);
+
+            return <canvas ref={chartRef} className="price-range-chart"></canvas>;
+        };
+
+        // Stock Analysis Component
+        const StockAnalysis = ({ data }) => {
+            return (
+                <div>
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="bg-gray-100">
+                                <th className="p-2">Symbol</th>
+                                <th className="p-2">P/E Ratio</th>
+                                <th className="p-2">Volume Trend</th>
+                                <th className="p-2">Change from High 52 (%)</th>
+                                <th className="p-2">Change from Low 52 (%)</th>
+                                <th className="p-2">Daily Change (₹)</th>
+                                <th className="p-2">Daily Change (%)</th>
+                                <th className="p-2">Price Range (52-Week)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.map((item, index) => {
+                                const pe = parseFloat(item['P/E']) || 0;
+                                const volume = parseFloat(item.Volume) || 0;
+                                const change = parseFloat(item.Change) || 0;
+                                const changePct = parseFloat(item['Change %']) || 0;
+                                const price = parseFloat(item.Price) || 0;
+                                const high52 = parseFloat(item['High 52']) || 0;
+                                const low52 = parseFloat(item['Low 52']) || 0;
+
+                                // Volume Trend
+                                const avgVolume = 100000;
+                                const volumeRatio = volume / avgVolume;
+                                let volumeTrend = 'Normal Activity';
+                                if (volumeRatio > 1.5) volumeTrend = 'High Activity';
+                                else if (volumeRatio < 0.5) volumeTrend = 'Low Activity';
+
+                                // Change from High 52 and Low 52
+                                const distHigh = high52 !== 0 ? (((high52 - price) / high52) * 100).toFixed(2) : 'N/A';
+                                const distLow = low52 !== 0 ? (((price - low52) / low52) * 100).toFixed(2) : 'N/A';
+
+                                // Quick Insights for Tooltip
+                                const insights = [];
+                                if (pe !== 0 && pe < 15) insights.push('Low P/E: Potentially undervalued');
+                                if (pe !== 0 && pe > 25) insights.push('High P/E: High growth expectations');
+                                if (volumeRatio > 1.5) insights.push('High trading activity: Possible news or interest');
+                                const tooltipContent = insights.length > 0 ? insights.join('<br>') : 'No specific insights available';
+
+                                return (
+                                    <tr key={index}>
+                                        <td className="p-2 symbol-cell relative">
+                                            {item.Symbol || ''}
+                                            <div className="stock-tooltip">{tooltipContent}</div>
+                                        </td>
+                                        <td className="p-2">{pe.toFixed(2)}</td>
+                                        <td className="p-2">{volumeTrend}</td>
+                                        <td className="p-2 negative">{distHigh}%</td>
+                                        <td className="p-2 positive">{distLow}%</td>
+                                        <td className="p-2 ${getPLClass(change)}">{change.toFixed(2)}</td>
+                                        <td className="p-2 ${getPLClass(changePct)}">{changePct.toFixed(2)}%</td>
+                                        <td className="p-2">
+                                            <PriceRangeChart
+                                                low52={low52}
+                                                price={price}
+                                                high52={high52}
+                                                index={index}
+                                            />
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        };
+
+        // Fetch Data and Render React Component
+        async function fetchPortfolio() {
+            const res = await fetch(SHEET_URL);
+            if (!res.ok) throw new Error('Failed to fetch portfolio data');
+            const data = await res.json();
+            console.log('Portfolio data:', data);
+            return data;
+        }
+
         function calcInsights(data) {
-            // Best and worst performing stock
             let best = null, worst = null;
             data.forEach(item => {
                 if (!best || parseFloat(item['Profit/Loss']) > parseFloat(best['Profit/Loss'])) best = item;
                 if (!worst || parseFloat(item['Profit/Loss']) < parseFloat(worst['Profit/Loss'])) worst = item;
             });
-            // Sector with highest allocation
             const sectorMap = {};
             data.forEach(item => {
                 const sector = item.Sector || 'Unknown';
-                sectorMap[sector] = (sectorMap[sector] || 0) + (parseFloat(item['Current Value']) || 0);
+                sectorMap[sector] = (sectorMap[sector] || 0) + (parseFloat(item['Current Value ']) || 0);
             });
             const topSector = Object.entries(sectorMap).sort((a, b) => b[1] - a[1])[0];
             return { best, worst, topSector };
+        }
+
+        function calcRiskMetrics(data) {
+            const plValues = data.map(item => {
+                const pl = parseFloat(item['Profit/Loss']);
+                if (isNaN(pl)) console.warn(`Invalid Profit/Loss for ${item.Symbol}: ${item['Profit/Loss']}`);
+                return pl;
+            }).filter(v => !isNaN(v));
+
+            let hasInvalidCV = false;
+            const cvValues = data.map(item => {
+                const cv = parseFloat(item['Current Value ']);
+                if (isNaN(cv)) {
+                    console.warn(`Invalid Current Value for ${item.Symbol}: ${item['Current Value ']}`);
+                    hasInvalidCV = true;
+                    return 10000;
+                }
+                return cv;
+            });
+            const totalValue = cvValues.reduce((sum, cv) => sum + cv, 0);
+
+            let volatility = 0, beta = 0, volatilityCalc = '', betaCalc = '';
+
+            if (plValues.length === 0) {
+                console.warn(`Cannot calculate risk metrics: No valid Profit/Loss entries`);
+                volatilityCalc = `Error: No valid Profit/Loss entries found. Please ensure 'Profit/Loss' in your Google Sheet contains numeric values (e.g., 5000).`;
+                betaCalc = volatilityCalc;
+            } else {
+                const meanPL = plValues.reduce((sum, val) => sum + val, 0) / plValues.length;
+
+                if (plValues.length >= 2) {
+                    const variance = plValues.reduce((sum, val) => sum + Math.pow(val - meanPL, 2), 0) / plValues.length;
+                    const stdDev = Math.sqrt(variance);
+                    volatility = (stdDev / totalValue * 100) || 0;
+                    volatilityCalc = `Volatility = (StdDev of P/L: ₹${stdDev.toFixed(2)} / Total Value: ₹${totalValue.toFixed(2)}) × 100 = ${volatility.toFixed(2)}%; low volatility means your portfolio has minimal price swings, indicating low risk.`;
+                    if (hasInvalidCV) {
+                        volatilityCalc += `<br><strong>Warning:</strong> 'Current Value ' contains 'N/A'. Using fallback value of ₹10,000 per stock. Please update your Google Sheet with numeric values (e.g., 10000).`;
+                    }
+                } else {
+                    volatilityCalc = `Volatility = 0%; only one P/L entry (${formatINR(plValues[0])}), so no variability to measure, assuming low risk.`;
+                    if (hasInvalidCV) {
+                        volatilityCalc += `<br><strong>Warning:</strong> 'Current Value ' contains 'N/A'. Using fallback value of ₹10,000 per stock. Please update your Google Sheet with numeric values (e.g., 10000).`;
+                    }
+                }
+
+                beta = (Math.abs(meanPL) / totalValue * 10) || 0;
+                betaCalc = `Beta = (|Mean P/L: ₹${meanPL.toFixed(2)}| / Total Value: ₹${totalValue.toFixed(2)}) × 10 = ${beta.toFixed(2)}; a low beta means your portfolio is less volatile than the market.`;
+                if (hasInvalidCV) {
+                    betaCalc += `<br><strong>Warning:</strong> 'Current Value ' contains 'N/A'. Using fallback value of ₹10,000 per stock. Please update your Google Sheet with numeric values (e.g., 10000).`;
+                }
+            }
+
+            return {
+                volatility: volatility.toFixed(2),
+                beta: beta.toFixed(2),
+                volatilityCalc,
+                betaCalc,
+                hasInvalidCV
+            };
         }
 
         function renderTopMetrics(totalInvested, totalValue, totalPL) {
@@ -290,8 +645,66 @@
         `;
         }
 
-        function renderInvestmentsTable(data) {
-            document.getElementById('investmentsBody').innerHTML = data.map(item => {
+        function renderRiskMetrics(volatility, beta, volatilityCalc, betaCalc, hasInvalidCV) {
+            const warning = hasInvalidCV
+                ? `<div class="text-red-600 text-sm mt-2">Warning: Invalid data in 'Current Value '. Using fallback values. Check Google Sheet.</div>`
+                : '';
+            document.getElementById('riskMetrics').innerHTML = `
+            <div class="metric-card bg-white rounded-lg p-6 flex flex-col items-center">
+                <span class="text-gray-500">Portfolio Volatility</span>
+                <span class="text-2xl font-bold mt-2">${volatility}%</span>
+                <span class="text-sm text-gray-400">${volatility < 10 ? 'Low' : volatility < 20 ? 'Moderate' : 'High'} Risk</span>
+                ${warning}
+                <div class="tooltip">${volatilityCalc}</div>
+            </div>
+            <div class="metric-card bg-white rounded-lg p-6 flex flex-col items-center">
+                <span class="text-gray-500">Portfolio Beta</span>
+                <span class="text-2xl font-bold mt-2">${beta}</span>
+                <span class="text-sm text-gray-400">${beta < 1 ? 'Less Volatile' : 'More Volatile'} than Market</span>
+                ${warning}
+                <div class="tooltip">${betaCalc}</div>
+            </div>
+        `;
+        }
+
+        function renderInvestmentsTable(data, sectorFilter = '', sortAsc = true) {
+            let filteredData = data;
+            if (sectorFilter) {
+                filteredData = data.filter(item => (item['Sector '] || 'Unknown') === sectorFilter);
+            }
+            filteredData = filteredData.sort((a, b) => {
+                const valA = parseFloat(a['Profit/Loss']) || 0;
+                const valB = parseFloat(b['Profit/Loss']) || 0;
+                return sortAsc ? valA - valB : valB - valA;
+            });
+            document.getElementById('investmentsTable').innerHTML = `
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="p-2">Symbol</th>
+                        <th class="p-2">Buy Price</th>
+                        <th class="p-2">Current Price</th>
+                        <th class="p-2">Quantity</th>
+                        <th class="p-2">Total Investment</th>
+                        <th class="p-2">Current Value</th>
+                        <th class="p-2">Profit/Loss</th>
+                        <th class="p-2">Sector</th>
+                        <th class="p-2">Date</th>
+                        <th class="p-2">Price</th>
+                        <th class="p-2">Price Open</th>
+                        <th class="p-2">Volume</th>
+                        <th class="p-2">Market Cap</th>
+                        <th class="p-2">P/E</th>
+                        <th class="p-2">EPS</th>
+                        <th class="p-2">High 52</th>
+                        <th class="p-2">Low 52</th>
+                        <th class="p-2">Change</th>
+                        <th class="p-2">Beta</th>
+                        <th class="p-2">Change %</th>
+                        <th class="p-2">Close Yesterday</th>
+                    </tr>
+                </thead>
+                <tbody id="investmentsBody">
+                    ${filteredData.map(item => {
                 const buyPrice = Number(item['Buy Price ']);
                 const currentPrice = Number(item['Current Price']);
                 const quantity = item['Quantity'] !== undefined && item['Quantity'] !== '' ? item['Quantity'] : '';
@@ -299,19 +712,40 @@
                 const currentValue = Number(item['Current Value ']);
                 const profitLoss = Number(item['Profit/Loss']);
                 return `
-                <tr>
-                    <td class="p-2">${item.Symbol || ''}</td>
-                    <td class="p-2">${!isNaN(buyPrice) && buyPrice !== 0 ? formatINR(buyPrice) : ''}</td>
-                    <td class="p-2">${!isNaN(currentPrice) && currentPrice !== 0 ? formatINR(currentPrice) : ''}</td>
-                    <td class="p-2">${quantity}</td>
-                    <td class="p-2">${!isNaN(totalInvestment) && totalInvestment !== 0 ? formatINR(totalInvestment) : ''}</td>
-                    <td class="p-2">${!isNaN(currentValue) && currentValue !== 0 ? formatINR(currentValue) : ''}</td>
-                    <td class="p-2 ${getPLClass(profitLoss)}">${!isNaN(profitLoss) && profitLoss !== 0 ? formatINR(profitLoss) : ''}</td>
-                    <td class="p-2">${item['Sector '] || ''}</td>
-                    <td class="p-2">${item.Date || ''}</td>
-                </tr>
+                            <tr>
+                                <td class="p-2">${item.Symbol || ''}</td>
+                                <td class="p-2">${!isNaN(buyPrice) && buyPrice !== 0 ? formatINR(buyPrice) : ''}</td>
+                                <td class="p-2">${!isNaN(currentPrice) && currentPrice !== 0 ? formatINR(currentPrice) : ''}</td>
+                                <td class="p-2">${quantity}</td>
+                                <td class="p-2">${!isNaN(totalInvestment) && totalInvestment !== 0 ? formatINR(totalInvestment) : ''}</td>
+                                <td class="p-2">${!isNaN(currentValue) && currentValue !== 0 ? formatINR(currentValue) : ''}</td>
+                                <td class="p-2 ${getPLClass(profitLoss)}">${!isNaN(profitLoss) && profitLoss !== 0 ? formatINR(profitLoss) : ''}</td>
+                                <td class="p-2">${item['Sector '] || ''}</td>
+                                <td class="p-2">${item.Date || ''}</td>
+                                <td class="p-2">${item.Price || ''}</td>
+                                <td class="p-2">${item['Price Open'] || ''}</td>
+                                <td class="p-2">${item.Volume || ''}</td>
+                                <td class="p-2">${item['Market Cap'] || ''}</td>
+                                <td class="p-2">${item['P/E'] || ''}</td>
+                                <td class="p-2">${item.EPS || ''}</td>
+                                <td class="p-2">${item['High 52'] || ''}</td>
+                                <td class="p-2">${item['Low 52'] || ''}</td>
+                                <td class="p-2">${item.Change || ''}</td>
+                                <td class="p-2">${item.Beta || ''}</td>
+                                <td class="p-2">${item['Change %'] || ''}</td>
+                                <td class="p-2">${item['Close Yesterday'] || ''}</td>
+                            </tr>
+                        `;
+            }).join('')}
+                </tbody>
             `;
-            }).join('');
+        }
+
+        function populateSectorFilter(data) {
+            const sectors = [...new Set(data.map(item => item['Sector '] || 'Unknown'))];
+            const select = document.getElementById('sectorFilter');
+            select.innerHTML = '<option value="">All Sectors</option>' +
+                sectors.map(sector => `<option value="${sector}">${sector}</option>`).join('');
         }
 
         function renderInsights(insights) {
@@ -383,17 +817,35 @@
         async function main() {
             try {
                 const data = await fetchPortfolio();
-                // Use summary row for top metrics (with correct field names)
                 const summary = data[0];
                 const rows = data;
                 const totalInvested = Number(summary['Total Invested Value ']) || 0;
                 const totalValue = Number(summary['Total Portfolio Value ']) || 0;
                 const totalPL = Number(summary['Total Profit/Loss']) || 0;
                 renderTopMetrics(totalInvested, totalValue, totalPL);
+
+                const riskMetrics = calcRiskMetrics(rows);
+                renderRiskMetrics(riskMetrics.volatility, riskMetrics.beta, riskMetrics.volatilityCalc, riskMetrics.betaCalc, riskMetrics.hasInvalidCV);
+
                 renderInvestmentsTable(rows);
+                populateSectorFilter(rows);
                 renderStockPerformanceChart(rows);
                 renderSectorChart(rows);
                 renderInsights(calcInsights(rows));
+
+                // Render React Component
+                const root = ReactDOM.createRoot(document.getElementById('stockAnalysisReact'));
+                root.render(<StockAnalysis data={rows} />);
+
+                let sortAsc = true;
+                document.getElementById('sectorFilter').addEventListener('change', (e) => {
+                    renderInvestmentsTable(rows, e.target.value, sortAsc);
+                });
+                document.getElementById('sortProfitLoss').addEventListener('click', () => {
+                    sortAsc = !sortAsc;
+                    renderInvestmentsTable(rows, document.getElementById('sectorFilter').value, sortAsc);
+                    document.getElementById('sortProfitLoss').textContent = `Sort by Profit/Loss (${sortAsc ? 'Asc' : 'Desc'})`;
+                });
             } catch (e) {
                 document.body.innerHTML = `<div class='text-center text-red-600 mt-20'>Failed to load portfolio data.<br>${e.message}</div>`;
             }
@@ -414,7 +866,6 @@
                 darkIcon.classList.remove('hidden');
                 lightIcon.classList.add('hidden');
             }
-            // Update Chart.js chart colors
             Chart.helpers.each(Chart.instances, function (instance) {
                 if (instance.options && instance.options.plugins && instance.options.plugins.legend) {
                     instance.options.plugins.legend.labels.color = enabled ? '#e0e7ef' : '#1f2937';
@@ -432,7 +883,6 @@
             setDarkMode(enabled);
             localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
         });
-        // On load, set dark mode if previously enabled
         if (localStorage.getItem('darkMode') === 'enabled') {
             setDarkMode(true);
         }
