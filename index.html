@@ -1,868 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Stock Portfolio Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.9/babel.min.js"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f9fafb 0%, #e0e7ff 100%);
-            transition: background 0.3s, color 0.3s;
-        }
-
-        .metric-card {
-            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-        }
-
-        .metric-card:hover {
-            transform: translateY(-4px) scale(1.03);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13);
-        }
-
-        .positive {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .negative {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .dark-mode {
-            background: linear-gradient(135deg, #18181b 0%, #312e81 100%) !important;
-            color: #e0e7ef !important;
-        }
-
-        .dark-mode .metric-card,
-        .dark-mode .bg-white {
-            background: #232946 !important;
-            color: #e0e7ef !important;
-            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.25);
-        }
-
-        .dark-mode .positive {
-            background: #134e4a !important;
-            color: #6ee7b7 !important;
-        }
-
-        .dark-mode .negative {
-            background: #7f1d1d !important;
-            color: #fecaca !important;
-        }
-
-        .dark-mode table {
-            background: #18181b !important;
-            color: #e0e7ef !important;
-        }
-
-        .dark-mode th,
-        .dark-mode td {
-            border-color: #232946 !important;
-        }
-
-        .dark-mode .bg-gray-100,
-        .dark-mode .bg-gray-50 {
-            background: #232946 !important;
-        }
-
-        .dark-mode .text-gray-500,
-        .dark-mode .text-gray-600,
-        .dark-mode .text-gray-700 {
-            color: #a5b4fc !important;
-        }
-
-        .dark-mode .text-blue-700 {
-            color: #60a5fa !important;
-        }
-
-        .dark-mode .text-green-700 {
-            color: #6ee7b7 !important;
-        }
-
-        .dark-mode .text-red-700 {
-            color: #fecaca !important;
-        }
-
-        .dark-mode .text-blue-600 {
-            color: #818cf8 !important;
-        }
-
-        .dark-mode .shadow {
-            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.35) !important;
-        }
-
-        .dark-toggle {
-            cursor: pointer;
-            background: #fff;
-            border-radius: 9999px;
-            padding: 0.5rem 1rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background 0.2s, color 0.2s;
-        }
-
-        .dark-toggle:hover {
-            background: #e0e7ff;
-        }
-
-        .dark-mode .dark-toggle {
-            background: #232946;
-            color: #e0e7ef;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-        }
-
-        .fade-in {
-            animation: fadeIn 1s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        .tooltip {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #fff;
-            color: #1f2937;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-            z-index: 10;
-            width: 350px;
-            max-height: 400px;
-            overflow-y: auto;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-
-        .metric-card:hover .tooltip {
-            display: block;
-        }
-
-        .dark-mode .tooltip {
-            background: #232946;
-            color: #e0e7ef;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-        }
-
-        .tooltip ul {
-            list-style-type: disc;
-            margin-left: 1.5rem;
-        }
-
-        .stock-tooltip {
-            display: none;
-            position: absolute;
-            background: #fff;
-            color: #1f2937;
-            padding: 0.5rem;
-            border-radius: 0.25rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            z-index: 20;
-            font-size: 0.85rem;
-            width: 200px;
-        }
-
-        .symbol-cell:hover .stock-tooltip {
-            display: block;
-        }
-
-        .dark-mode .stock-tooltip {
-            background: #232946;
-            color: #e0e7ef;
-        }
-
-        canvas.price-range-chart {
-            height: 40px !important;
-            width: 150px !important;
-            margin: 0 auto;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Viom Kapur's Indian equity portfolio dashboard">
+  <title>Viom Kapur | Stock Portfolio</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+  <style>
+    :root{--bg:#f4f7fb;--panel:#fff;--panel2:#f8fafc;--text:#111827;--muted:#64748b;--line:#e5e7eb;--brand:#4f46e5;--brand2:#7c3aed;--green:#059669;--green-bg:#ecfdf5;--red:#dc2626;--red-bg:#fef2f2;--amber:#d97706;--shadow:0 10px 30px rgba(15,23,42,.06)}
+    [data-theme="dark"]{--bg:#080d19;--panel:#111827;--panel2:#0f172a;--text:#f8fafc;--muted:#94a3b8;--line:#263247;--brand:#818cf8;--brand2:#a78bfa;--green:#34d399;--green-bg:#062b22;--red:#fb7185;--red-bg:#35131b;--amber:#fbbf24;--shadow:0 12px 32px rgba(0,0,0,.22)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;transition:.2s}button,input,select{font:inherit}.shell{max-width:1320px;margin:auto;padding:0 22px 44px}.topbar{position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(14px)}.topbar-inner{max-width:1320px;margin:auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{display:flex;align-items:center;gap:11px}.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#4f46e5,#7c3aed);box-shadow:0 8px 20px rgba(79,70,229,.25)}.brand strong{display:block}.brand small,.muted{color:var(--muted)}.actions{display:flex;align-items:center;gap:8px}.btn,.icon-btn{border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;border-radius:11px;padding:9px 13px;font-weight:700;transition:.18s}.icon-btn{width:40px;height:40px;padding:0}.btn:hover,.icon-btn:hover{border-color:var(--brand);transform:translateY(-1px)}.btn.primary{border:0;color:#fff;background:linear-gradient(135deg,#4f46e5,#6d5ce7)}.hero{padding:28px 0 20px;display:flex;align-items:end;justify-content:space-between;gap:20px}.eyebrow{margin:0 0 5px;color:var(--brand);font-weight:800;font-size:13px}.hero h1{margin:0;font-size:clamp(27px,4vw,40px);letter-spacing:-.04em}.hero p{margin:8px 0 0;color:var(--muted)}.status{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px color-mix(in srgb,var(--green) 14%,transparent)}.grid{display:grid;gap:16px}.kpis{grid-template-columns:repeat(4,1fr)}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}.kpi{padding:20px}.kpi-top{display:flex;justify-content:space-between;align-items:center}.kpi-icon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:color-mix(in srgb,var(--brand) 11%,transparent);color:var(--brand);font-size:18px}.kpi-label{color:var(--muted);font-size:13px;margin:16px 0 5px}.kpi-value{font-size:25px;font-weight:850;letter-spacing:-.03em}.kpi-note{margin-top:6px;color:var(--muted);font-size:12px}.positive{color:var(--green)!important}.negative{color:var(--red)!important}.badge{padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted)}.main-grid{margin-top:16px;grid-template-columns:1.5fr 1fr}.section-head{padding:18px 20px 0;display:flex;justify-content:space-between;align-items:start;gap:10px}.section-head h2{margin:0;font-size:16px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:12px}.chart-wrap{height:280px;padding:20px}.insights{margin-top:16px;grid-template-columns:repeat(4,1fr)}.insight{padding:18px}.insight .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:850;color:var(--muted)}.insight strong{display:block;margin-top:8px;font-size:17px}.insight p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.45}.table-card{margin-top:16px;overflow:hidden}.toolbar{padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line)}.toolbar h2{margin:0;font-size:18px}.controls{display:flex;gap:8px;flex-wrap:wrap}.field{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:10px;padding:9px 11px;outline:none}.field:focus{border-color:var(--brand)}.table-scroll{overflow:auto}table{width:100%;min-width:1080px;border-collapse:collapse;text-align:left}th{padding:12px 16px;background:var(--panel2);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}.sort-btn{display:flex;align-items:center;gap:6px;width:100%;border:0;padding:0;background:transparent;color:inherit;font:inherit;font-weight:800;text-transform:inherit;letter-spacing:inherit;cursor:pointer;text-align:left}.sort-btn:hover,.sort-btn.active{color:var(--brand)}.sort-icon{font-size:12px;min-width:12px}.sort-hint{color:var(--muted);font-size:11px;margin-top:6px}td{padding:14px 16px;border-top:1px solid var(--line);font-size:13px;white-space:nowrap}tbody tr:hover{background:color-mix(in srgb,var(--brand) 3%,var(--panel))}.symbol{font-weight:850}.company-note{color:var(--muted);font-size:11px;margin-top:3px;max-width:190px;overflow:hidden;text-overflow:ellipsis}.pill{display:inline-block;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800;background:var(--panel2)}.range{width:165px}.range-track{height:10px;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;position:relative}.range-segment{height:8px;border-radius:3px;background:var(--line);overflow:hidden}.range-segment-fill{height:100%;background:linear-gradient(90deg,#38bdf8,var(--brand))}.range-dot{position:absolute;top:4px;width:12px;height:12px;border:2px solid var(--panel);border-radius:50%;background:var(--brand);transform:translate(-50%,-50%);box-shadow:0 1px 5px rgba(0,0,0,.25)}.range-meta{display:flex;justify-content:space-between;align-items:center;margin-top:6px}.range-labels{display:flex;gap:8px;color:var(--muted);font-size:9px}.range-score{font-size:11px;font-weight:850;color:var(--brand)}.empty,.error{padding:42px;text-align:center;color:var(--muted)}.error{color:var(--red)}.footer{display:flex;justify-content:space-between;gap:16px;color:var(--muted);font-size:12px;padding:15px 4px}.skeleton{animation:pulse 1.2s infinite;background:linear-gradient(90deg,var(--panel2),var(--line),var(--panel2));background-size:200% 100%;color:transparent!important;border-radius:6px}@keyframes pulse{to{background-position:-200% 0}}@media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.main-grid{grid-template-columns:1fr}}@media(max-width:700px){.shell,.topbar-inner{padding-left:14px;padding-right:14px}.name-hide,.updated-hide{display:none}.hero{align-items:start;flex-direction:column}.kpis,.insights{grid-template-columns:1fr}.toolbar{align-items:flex-start;flex-direction:column}.controls{width:100%}.field{width:100%}.btn.export{display:none}.chart-wrap{height:240px}}
+  </style>
 </head>
+<body>
+<header class="topbar"><div class="topbar-inner"><div class="brand"><div class="logo">↗</div><div><strong>Portfolio</strong><small class="name-hide">Viom Kapur · NSE</small></div></div><div class="actions"><span class="muted updated-hide" id="updated">Not updated</span><button class="icon-btn" id="refreshBtn" title="Refresh data" aria-label="Refresh data">↻</button><button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">◐</button><button class="btn primary export" id="exportBtn">Export CSV</button></div></div></header>
+<main class="shell">
+  <section class="hero"><div><p class="eyebrow">Portfolio overview</p><h1 id="greeting">Your investment dashboard</h1><p>Track holdings, returns, allocation and market positioning in one place.</p></div><div class="status"><span class="dot"></span><span id="connectionStatus">Connecting to Google Sheets…</span></div></section>
+  <section class="grid kpis">
+    <article class="card kpi"><div class="kpi-top"><span class="kpi-icon">₹</span><span class="badge" id="holdingsCount">—</span></div><div class="kpi-label">Portfolio value</div><div class="kpi-value skeleton" id="totalValue">Loading</div><div class="kpi-note">Latest sheet values</div></article>
+    <article class="card kpi"><div class="kpi-top"><span class="kpi-icon">◫</span></div><div class="kpi-label">Total invested</div><div class="kpi-value skeleton" id="totalInvested">Loading</div><div class="kpi-note">Total acquisition cost</div></article>
+    <article class="card kpi"><div class="kpi-top"><span class="kpi-icon">↗</span></div><div class="kpi-label">Unrealised P&amp;L</div><div class="kpi-value skeleton" id="totalPL">Loading</div><div class="kpi-note">Current value less invested value</div></article>
+    <article class="card kpi"><div class="kpi-top"><span class="kpi-icon">%</span><span class="badge" id="profitableCount">—</span></div><div class="kpi-label">Total portfolio return</div><div class="kpi-value skeleton" id="portfolioReturn">Loading</div><div class="kpi-note">Unrealised P&amp;L ÷ total invested</div></article>
+    <article class="card kpi"><div class="kpi-top"><span class="kpi-icon">↕</span><span class="badge" id="dayMovePct">—</span></div><div class="kpi-label">Today's portfolio movement</div><div class="kpi-value skeleton" id="dayMoveValue">Loading</div><div class="kpi-note">Position-weighted daily impact</div></article>
+    <article class="card kpi"><div class="kpi-top"><span class="kpi-icon">P/E</span><span class="badge" id="peCoverage">—</span></div><div class="kpi-label">Weighted portfolio P/E</div><div class="kpi-value skeleton" id="weightedPE">Loading</div><div class="kpi-note">Current-value weighted, positive P/E only</div></article>
+    <article class="card kpi"><div class="kpi-top"><span class="kpi-icon">◎</span><span class="badge" id="top3Weight">—</span></div><div class="kpi-label">Holding concentration</div><div class="kpi-value skeleton" id="largestHolding">Loading</div><div class="kpi-note" id="largestHoldingNote">Largest holding and top-three weight</div></article>
+    <article class="card kpi"><div class="kpi-top"><span class="kpi-icon">↗</span><span class="badge" id="closestHighPct">—</span></div><div class="kpi-label">Closest to 52-week high</div><div class="kpi-value skeleton" id="closestHigh">Loading</div><div class="kpi-note" id="closestHighNote">Price positioning, not a recommendation</div></article>
+    <article class="card kpi"><div class="kpi-top"><span class="kpi-icon">↘</span><span class="badge" id="closestLowPct">—</span></div><div class="kpi-label">Closest to 52-week low</div><div class="kpi-value skeleton" id="closestLow">Loading</div><div class="kpi-note" id="closestLowNote">Price positioning, not a recommendation</div></article>
+  </section>
+  <section class="grid main-grid">
+    <article class="card"><div class="section-head"><div><h2>Profit contribution</h2><p>Unrealised P&amp;L by holding</p></div></div><div class="chart-wrap"><canvas id="performanceChart"></canvas></div></article>
+    <article class="card"><div class="section-head"><div><h2>Sector allocation</h2><p>Based on current portfolio value</p></div></div><div class="chart-wrap"><canvas id="sectorChart"></canvas></div></article>
+  </section>
+  <section class="grid insights">
+    <article class="card insight"><span class="label">Best performer</span><strong id="bestPerformer">—</strong><p id="bestNote">Waiting for portfolio data.</p></article>
+    <article class="card insight"><span class="label">Needs attention</span><strong id="worstPerformer">—</strong><p id="worstNote">Waiting for portfolio data.</p></article>
+    <article class="card insight"><span class="label">Allocation watch</span><strong id="allocationWatch">—</strong><p id="allocationNote">Waiting for portfolio data.</p></article>
+    <article class="card insight"><span class="label">Gain concentration</span><strong id="gainConcentration">—</strong><p id="gainConcentrationNote">Waiting for portfolio data.</p></article>
+  </section>
+  <section class="card table-card"><div class="toolbar"><div><h2>All holdings</h2><div class="muted" style="font-size:12px;margin-top:4px" id="rowSummary">Loading holdings…</div><div class="sort-hint">Click any column heading to switch between high-to-low and low-to-high.</div></div><div class="controls"><input class="field" id="searchInput" placeholder="Search symbol or thought" aria-label="Search holdings"><select class="field" id="sectorFilter" aria-label="Filter by sector"><option value="">All sectors</option></select></div></div><div class="table-scroll"><table><thead><tr><th><button class="sort-btn" data-sort="name">Holding<span class="sort-icon">↕</span></button></th><th><button class="sort-btn" data-sort="quantity">Qty<span class="sort-icon">↕</span></button></th><th><button class="sort-btn" data-sort="buy">Buy price<span class="sort-icon">↕</span></button></th><th><button class="sort-btn" data-sort="price">Current price<span class="sort-icon">↕</span></button></th><th><button class="sort-btn" data-sort="value">Current value<span class="sort-icon">↕</span></button></th><th><button class="sort-btn" data-sort="returnPct">Total return<span class="sort-icon">↕</span></button></th><th><button class="sort-btn" data-sort="dayPct">Day<span class="sort-icon">↕</span></button></th><th><button class="sort-btn" data-sort="outlook">Outlook<span class="sort-icon">↕</span></button></th><th><button class="sort-btn" data-sort="rangeScore">52-week position score<span class="sort-icon">↕</span></button></th></tr></thead><tbody id="holdingsBody"><tr><td colspan="9" class="empty">Loading data from Google Sheets…</td></tr></tbody></table></div></section>
+  <footer class="footer"><span>Data supplied through your Google Apps Script endpoint.</span><span>For portfolio monitoring only, not investment advice.</span></footer>
+</main>
+<script>
+const SHEET_URL='https://script.google.com/macros/s/AKfycbxjoZEF_pqjuAL59l-3bAH2E2VD2eLi2IP6EHD34gQkYFmK5J5h8cRgDlSxeHLOIynPsA/exec';
+const state={rows:[],filtered:[],charts:{},detailMap:{},sortKey:'value',sortDirection:'desc'};
+const $=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(Number(n)||0);
+const compact=n=>new Intl.NumberFormat('en-IN',{notation:'compact',maximumFractionDigits:1}).format(Number(n)||0);
+const num=v=>{if(v===null||v===undefined||v==='')return 0;const n=Number(String(v).replace(/[₹,%\s,]/g,''));return Number.isFinite(n)?n:0};
+const clean=o=>Object.fromEntries(Object.entries(o||{}).map(([k,v])=>[String(k).trim(),v]));
+const get=(o,...keys)=>{for(const k of keys){if(o[k]!==undefined&&o[k]!==null&&o[k]!=='')return o[k]}return ''};
+const symbolName=s=>String(s||'').replace(/^NSE:/i,'');
+const firstNonBlank=(...values)=>values.find(v=>v!==undefined&&v!==null&&String(v).trim()!=='')??'';
+function normalizePayload(data){
+  // Your Apps Script returns one merged JSON array: [{...Portfolio, ...Stock Details}, ...]
+  let rows = Array.isArray(data) ? data : (data && Array.isArray(data.data) ? data.data : []);
+  return rows.map(clean).filter(r=>String(get(r,'Symbol')).trim()).map(r=>{
+    const symbol=String(get(r,'Symbol')).trim();
+    const buy=num(get(r,'Buy Price'));
+    const quantity=num(get(r,'Quantity'));
+    // In the merged Apps Script response, Stock Details.Price is the live price.
+    const price=num(firstNonBlank(get(r,'Price'),get(r,'Current Price')));
+    const invested=num(get(r,'Total Investment')) || buy*quantity;
+    const value=num(get(r,'Current Value')) || price*quantity;
+    // Do not use || here because a genuine zero profit/loss is valid.
+    const rawPL=get(r,'Profit/Loss');
+    const pl=String(rawPL).trim()==='' ? value-invested : num(rawPL);
+    return {
+      symbol,
+      name:symbolName(symbol),
+      sector:String(get(r,'Sector')||'Unclassified').trim(),
+      buy,quantity,price,invested,value,pl,
+      returnPct:invested ? pl/invested*100 : 0,
+      thought:String(get(r,'Thoughts')||'').trim(),
+      outlook:String(get(r,'Outlook')||'—').trim(),
+      date:get(r,'Date'),
+      pe:num(get(r,'P/E')),
+      high52:num(get(r,'High 52')),
+      low52:num(get(r,'Low 52')),
+      dayChange:num(get(r,'Change')),
+      dayPct:num(get(r,'Change %'))
+    };
+  });
+}
+function setText(id,text,cls=''){const el=$(id);el.textContent=text;el.classList.remove('skeleton','positive','negative');if(cls)el.classList.add(cls)}
+function renderKPIs(rows){
+  const invested=rows.reduce((s,r)=>s+r.invested,0);
+  const value=rows.reduce((s,r)=>s+r.value,0);
+  const totalPL=value-invested;
+  const totalReturn=invested?totalPL/invested*100:0;
+  const profitable=rows.filter(r=>r.pl>0).length;
+  const sectors={}; rows.forEach(r=>sectors[r.sector]=(sectors[r.sector]||0)+r.value);
+  const topSector=Object.entries(sectors).sort((a,b)=>b[1]-a[1])[0]||['—',0];
 
-<body class="min-h-screen p-6">
-    <div class="max-w-6xl mx-auto">
-        <header class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between fade-in"
-            style="background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%); border-radius: 1rem; padding: 1.5rem 2rem; box-shadow: 0 4px 24px rgba(99,102,241,0.13);">
-            <div class="flex flex-col gap-2 md:gap-0 md:flex-row md:items-center">
-                <h1 class="text-3xl font-bold mb-2 md:mb-0 text-white flex items-center gap-2">
-                    <span>📈</span> My Stock Portfolio Dashboard
-                </h1>
-                <span class="ml-3 text-lg font-semibold text-blue-100 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-green-300" fill="currentColor" viewBox="0 0 20 20">
-                        <circle cx="10" cy="10" r="10" />
-                    </svg>
-                    Viom Kapur
-                </span>
-            </div>
-            <div class="flex items-center gap-4 mt-4 md:mt-0">
-                <a href="https://kyupralis24.github.io/portfolio/" target="_blank"
-                    class="transition-all duration-200 bg-white text-indigo-700 font-bold px-5 py-2 rounded-full shadow hover:bg-indigo-600 hover:text-white flex items-center gap-2 border-2 border-indigo-200 hover:border-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                    title="View my Resume Portfolio">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                    Resume Portfolio
-                </a>
-                <a href="https://www.linkedin.com/in/viom-kapur-93434621b/" target="_blank"
-                    class="text-blue-100 hover:underline font-semibold">LinkedIn</a>
-                <button id="darkModeToggle" class="dark-toggle" title="Toggle dark mode">
-                    <svg id="darkIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.07l-.71.71M21 12h-1M4 12H3m16.66 5.66l-.71-.71M4.05 4.93l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    <svg id="lightIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
-                    </svg>
-                </button>
-            </div>
-        </header>
-        <div class="mb-8 text-center fade-in">
-            <p class="text-lg text-indigo-900 dark:text-indigo-200 font-medium">Welcome to Viom Kapur's personalized
-                investment dashboard. Track, analyze, and grow your portfolio with confidence! 🚀</p>
-        </div>
+  // B: Today's portfolio movement, weighted by the actual number of shares held.
+  const dailyValue=rows.reduce((s,r)=>s+(r.dayChange*r.quantity),0);
+  const previousValue=rows.reduce((s,r)=>s+((r.price-r.dayChange)*r.quantity),0);
+  const dailyPct=previousValue?dailyValue/previousValue*100:0;
+  setText('dayMoveValue',`${dailyValue>=0?'+':''}${money(dailyValue)}`,dailyValue>=0?'positive':'negative');
+  setText('dayMovePct',`${dailyPct>=0?'+':''}${dailyPct.toFixed(2)}%`,dailyPct>=0?'positive':'negative');
 
-        <!-- Top Metrics -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" id="topMetrics">
-            <!-- JS will populate -->
-        </section>
+  // C: Current-value weighted P/E. Exclude missing, zero and negative P/E values.
+  const peRows=rows.filter(r=>r.pe>0&&r.value>0);
+  const peValue=peRows.reduce((s,r)=>s+r.value,0);
+  const weightedPE=peValue?peRows.reduce((s,r)=>s+r.pe*r.value,0)/peValue:0;
+  setText('weightedPE',weightedPE?`${weightedPE.toFixed(1)}x`:'—');
+  setText('peCoverage',`${peRows.length}/${rows.length} included`);
 
-        <!-- Insights -->
-        <section class="mb-8" id="insights">
-            <!-- JS will populate -->
-        </section>
+  // D + E: Largest holding plus combined top-three concentration.
+  const ranked=[...rows].sort((a,b)=>b.value-a.value);
+  const largest=ranked[0];
+  const largestWeight=value&&largest?largest.value/value*100:0;
+  const top3Weight=value?ranked.slice(0,3).reduce((s,r)=>s+r.value,0)/value*100:0;
+  setText('largestHolding',largest?largest.name:'—');
+  setText('largestHoldingNote',`${largestWeight.toFixed(1)}% largest holding · ${top3Weight.toFixed(1)}% in top 3`);
+  setText('top3Weight',`Top 3: ${top3Weight.toFixed(1)}%`);
 
-        <!-- Risk Metrics -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" id="riskMetrics">
-            <!-- JS will populate -->
-        </section>
+  // G + H: Closest to the high and low, plus numerical range score.
+  const ranged=rows.map(r=>({...r,rangeScore:rangePosition(r)})).filter(r=>r.rangeScore!==null);
+  const nearHigh=[...ranged].sort((a,b)=>b.rangeScore-a.rangeScore)[0];
+  const nearLow=[...ranged].sort((a,b)=>a.rangeScore-b.rangeScore)[0];
+  const belowHigh=nearHigh&&nearHigh.high52?Math.max(0,(nearHigh.high52-nearHigh.price)/nearHigh.high52*100):0;
+  const aboveLow=nearLow&&nearLow.low52?Math.max(0,(nearLow.price-nearLow.low52)/nearLow.low52*100):0;
+  setText('closestHigh',nearHigh?nearHigh.name:'—');
+  setText('closestHighPct',nearHigh?`${belowHigh.toFixed(1)}% below`:'—');
+  setText('closestHighNote',nearHigh?`52-week range score: ${nearHigh.rangeScore.toFixed(1)}/100`:'No range data');
+  setText('closestLow',nearLow?nearLow.name:'—');
+  setText('closestLowPct',nearLow?`${aboveLow.toFixed(1)}% above`:'—');
+  setText('closestLowNote',nearLow?`52-week range score: ${nearLow.rangeScore.toFixed(1)}/100`:'No range data');
 
-        <!-- Investments Table with Screener -->
-        <section class="mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4">All Investments</h2>
-                <div class="mb-4 flex flex-col md:flex-row gap-4">
-                    <div>
-                        <label for="sectorFilter" class="text-gray-600 mr-2">Filter by Sector:</label>
-                        <select id="sectorFilter" class="border rounded p-2 text-gray-700">
-                            <option value="">All Sectors</option>
-                            <!-- JS will populate -->
-                        </select>
-                    </div>
-                    <button id="sortProfitLoss" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
-                        Sort by Profit/Loss (Asc)
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm" id="investmentsTable">
-                        <!-- JS will populate -->
-                    </table>
-                </div>
-            </div>
-        </section>
+  setText('totalValue',money(value)); setText('totalInvested',money(invested)); setText('totalPL',`${totalPL>=0?'+':''}${money(totalPL)}`,totalPL>=0?'positive':'negative'); setText('portfolioReturn',`${totalReturn>=0?'+':''}${totalReturn.toFixed(2)}%`,totalReturn>=0?'positive':'negative'); setText('profitableCount',`${profitable}/${rows.length} profitable`); setText('holdingsCount',`${rows.length} holdings`);
+  const best=[...rows].sort((a,b)=>b.returnPct-a.returnPct)[0],worst=[...rows].sort((a,b)=>a.returnPct-b.returnPct)[0];
+  setText('bestPerformer',best?best.name:'—'); setText('bestNote',best?`${best.returnPct>=0?'+':''}${best.returnPct.toFixed(1)}% total return · ${money(best.pl)}`:'No data');
+  setText('worstPerformer',worst?worst.name:'—'); setText('worstNote',worst?`${worst.returnPct>=0?'+':''}${worst.returnPct.toFixed(1)}% total return · ${money(worst.pl)}`:'No data');
+  setText('allocationWatch',topSector[0]); setText('allocationNote',`${value?(topSector[1]/value*100).toFixed(1):0}% of the portfolio is allocated to this sector.`);
 
-        <!-- Charts -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold mb-4">Stock Performance</h2>
-                <canvas id="stockPerformanceChart" height="200"></canvas>
-            </div>
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-semibold mb-4">Sector Allocation</h2>
-                <canvas id="sectorChart" height="200"></canvas>
-            </div>
-        </section>
-
-        <!-- Strategy -->
-        <section class="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 class="text-lg font-semibold mb-2">My Investment Strategy</h2>
-            <p class="text-gray-600">I focus on data-driven, diversified, and long-term investments in the Indian
-                market, prioritizing strong fundamentals and sectoral trends. I regularly review my portfolio for risk
-                and growth opportunities.</p>
-        </section>
-
-        <!-- Stock Analysis Insights (React Component) -->
-        <section class="mb-8" id="stockAnalysisSection">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4">Stock Analysis Insights</h2>
-                <div id="stockAnalysisReact" class="overflow-x-auto"></div>
-            </div>
-        </section>
-
-        <!-- Understanding the Metrics -->
-        <section class="mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4">Understanding the Metrics</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <h3 class="text-lg font-semibold text-gray-700">P/E Ratio</h3>
-                        <p class="text-gray-600">
-                            <strong>Formula:</strong> Provided directly from the "Stock Details" sheet.<br>
-                            <strong>Explanation:</strong> The Price-to-Earnings (P/E) ratio measures a stock's price
-                            relative to its earnings per share (EPS). A lower P/E may indicate an undervalued stock,
-                            while a higher P/E could suggest growth expectations or overvaluation.
-                        </p>
-                    </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <h3 class="text-lg font-semibold text-gray-700">Volume Trend</h3>
-                        <p class="text-gray-600">
-                            <strong>Formula:</strong> Volume / Average Volume (assumed 100,000).<br>
-                            - High Activity: > 1.5<br>
-                            - Low Activity: < 0.5<br>
-                                - Normal Activity: Otherwise<br>
-                                <strong>Explanation:</strong> Compares the stock's trading volume to an assumed average.
-                                High volume may indicate strong interest or news, while low volume suggests lack of
-                                interest.
-                        </p>
-                    </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <h3 class="text-lg font-semibold text-gray-700">Change from High 52 (%)</h3>
-                        <p class="text-gray-600">
-                            <strong>Formula:</strong> (High 52 - Price) / High 52 × 100%.<br>
-                            <strong>Explanation:</strong> Shows how far the current price is below the 52-week high, as
-                            a percentage. A smaller percentage indicates the stock is closer to its yearly peak,
-                            suggesting potential resistance.
-                        </p>
-                    </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <h3 class="text-lg font-semibold text-gray-700">Change from Low 52 (%)</h3>
-                        <p class="text-gray-600">
-                            <strong>Formula:</strong> (Price - Low 52) / Low 52 × 100%.<br>
-                            <strong>Explanation:</strong> Shows how far the current price is above the 52-week low, as a
-                            percentage. A larger percentage indicates the stock has risen significantly from its yearly
-                            low, suggesting potential support.
-                        </p>
-                    </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <h3 class="text-lg font-semibold text-gray-700">Daily Change (₹)</h3>
-                        <p class="text-gray-600">
-                            <strong>Formula:</strong> Provided directly from the "Stock Details" sheet (Change = Price -
-                            Close Yesterday).<br>
-                            <strong>Explanation:</strong> The absolute change in the stock's price from the previous
-                            day's close. Positive values indicate a price increase, while negative values indicate a
-                            decrease.
-                        </p>
-                    </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <h3 class="text-lg font-semibold text-gray-700">Daily Change (%)</h3>
-                        <p class="text-gray-600">
-                            <strong>Formula:</strong> Provided directly from the "Stock Details" sheet.<br>
-                            <strong>Explanation:</strong> The percentage change in the stock's price from the previous
-                            day's close. It helps assess the stock's daily performance relative to its price.
-                        </p>
-                    </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <h3 class="text-lg font-semibold text-gray-700">Price Range (52-Week)</h3>
-                        <p class="text-gray-600">
-                            <strong>Formula:</strong> Visual representation using Low 52, Price, and High 52.<br>
-                            <strong>Explanation:</strong> A line chart showing the stock's price range over the past 52
-                            weeks. The blue line spans from the 52-week low to high, with a red triangle indicating the
-                            current price. Hover to see exact values.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <script type="text/babel">
-        // Google Sheets App Script endpoint
-        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxjoZEF_pqjuAL59l-3bAH2E2VD2eLi2IP6EHD34gQkYFmK5J5h8cRgDlSxeHLOIynPsA/exec';
-
-        // Utility Functions
-        function formatINR(num) {
-            return '₹' + Number(num).toLocaleString('en-IN', { maximumFractionDigits: 2 });
-        }
-
-        function getPLClass(val) {
-            return parseFloat(val) >= 0 ? 'positive' : 'negative';
-        }
-
-        // Price Range Chart Component (Using Chart.js Bar Chart)
-        const PriceRangeChart = ({ low52, price, high52, index }) => {
-            const chartRef = React.useRef(null);
-            const chartInstanceRef = React.useRef(null);
-
-            React.useEffect(() => {
-                if (chartInstanceRef.current) {
-                    chartInstanceRef.current.destroy();
-                }
-
-                const ctx = chartRef.current.getContext('2d');
-                const range = high52 - low52;
-                const pricePosition = range !== 0 ? (price - low52) / range * 100 : 0;
-
-                // Calculate rating (1-5)
-                const rating = Math.min(5, Math.max(1, (pricePosition / 100) * 5));
-                const fullIcons = Math.floor(rating);
-                const hasHalfIcon = rating % 1 >= 0.5;
-
-                // Get the current theme colors
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                const activeColor = isDarkMode ? '#818cf8' : '#60a5fa';
-                const inactiveColor = isDarkMode ? '#4b5563' : '#e5e7eb';
-
-                // Clear canvas
-                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-                // Draw rating
-                const barWidth = 40;
-                const barHeight = 8;
-                const spacing = 8;
-                const totalWidth = (barWidth + spacing) * 5 - spacing;
-                const startX = (ctx.canvas.width - totalWidth) / 2;
-                const centerY = ctx.canvas.height / 2;
-
-                // Draw background bars
-                for (let i = 0; i < 5; i++) {
-                    const x = startX + i * (barWidth + spacing);
-
-                    // Draw rounded rectangle
-                    ctx.beginPath();
-                    ctx.roundRect(x, centerY - barHeight / 2, barWidth, barHeight, 4);
-                    ctx.fillStyle = inactiveColor;
-                    ctx.fill();
-
-                    // Draw active portion
-                    if (i < fullIcons) {
-                        ctx.beginPath();
-                        ctx.roundRect(x, centerY - barHeight / 2, barWidth, barHeight, 4);
-                        ctx.fillStyle = activeColor;
-                        ctx.fill();
-                    } else if (i === fullIcons && hasHalfIcon) {
-                        ctx.beginPath();
-                        ctx.roundRect(x, centerY - barHeight / 2, barWidth / 2, barHeight, 4);
-                        ctx.fillStyle = activeColor;
-                        ctx.fill();
-                    }
-                }
-
-                return () => {
-                    if (chartInstanceRef.current) {
-                        chartInstanceRef.current.destroy();
-                    }
-                };
-            }, [low52, price, high52]);
-
-            return <canvas ref={chartRef} className="price-range-chart"></canvas>;
-        };
-
-        // Stock Analysis Component
-        const StockAnalysis = ({ data }) => {
-            return (
-                <div>
-                    <table className="min-w-full text-sm">
-                        <thead>
-                            <tr className="bg-gray-100">
-                                <th className="p-2">Symbol</th>
-                                <th className="p-2">P/E Ratio</th>
-                                <th className="p-2">Volume Trend</th>
-                                <th className="p-2">Change from High 52 (%)</th>
-                                <th className="p-2">Change from Low 52 (%)</th>
-                                <th className="p-2">Daily Change (₹)</th>
-                                <th className="p-2">Daily Change (%)</th>
-                                <th className="p-2">Price Range (52-Week)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.map((item, index) => {
-                                const pe = parseFloat(item['P/E']) || 0;
-                                const volume = parseFloat(item.Volume) || 0;
-                                const change = parseFloat(item.Change) || 0;
-                                const changePct = parseFloat(item['Change %']) || 0;
-                                const price = parseFloat(item.Price) || 0;
-                                const high52 = parseFloat(item['High 52']) || 0;
-                                const low52 = parseFloat(item['Low 52']) || 0;
-
-                                // Volume Trend
-                                const avgVolume = 100000;
-                                const volumeRatio = volume / avgVolume;
-                                let volumeTrend = 'Normal Activity';
-                                if (volumeRatio > 1.5) volumeTrend = 'High Activity';
-                                else if (volumeRatio < 0.5) volumeTrend = 'Low Activity';
-
-                                // Change from High 52 and Low 52
-                                const distHigh = high52 !== 0 ? (((high52 - price) / high52) * 100).toFixed(2) : 'N/A';
-                                const distLow = low52 !== 0 ? (((price - low52) / low52) * 100).toFixed(2) : 'N/A';
-
-                                // Quick Insights for Tooltip
-                                const insights = [];
-                                if (pe !== 0 && pe < 15) insights.push('Low P/E: Potentially undervalued');
-                                if (pe !== 0 && pe > 25) insights.push('High P/E: High growth expectations');
-                                if (volumeRatio > 1.5) insights.push('High trading activity: Possible news or interest');
-                                const tooltipContent = insights.length > 0 ? insights.join('<br>') : 'No specific insights available';
-
-                                return (
-                                    <tr key={index}>
-                                        <td className="p-2 symbol-cell relative">
-                                            {item.Symbol || ''}
-                                            <div className="stock-tooltip">{tooltipContent}</div>
-                                        </td>
-                                        <td className="p-2">{pe.toFixed(2)}</td>
-                                        <td className="p-2">{volumeTrend}</td>
-                                        <td className="p-2 negative">{distHigh}%</td>
-                                        <td className="p-2 positive">{distLow}%</td>
-                                        <td className="p-2 ${getPLClass(change)}">{change.toFixed(2)}</td>
-                                        <td className="p-2 ${getPLClass(changePct)}">{changePct.toFixed(2)}%</td>
-                                        <td className="p-2">
-                                            <PriceRangeChart
-                                                low52={low52}
-                                                price={price}
-                                                high52={high52}
-                                                index={index}
-                                            />
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        };
-
-        // Fetch Data and Render React Component
-        async function fetchPortfolio() {
-            const res = await fetch(SHEET_URL);
-            if (!res.ok) throw new Error('Failed to fetch portfolio data');
-            const data = await res.json();
-            console.log('Portfolio data:', data);
-            return data;
-        }
-
-        function calcInsights(data) {
-            let best = null, worst = null;
-            data.forEach(item => {
-                if (!best || parseFloat(item['Profit/Loss']) > parseFloat(best['Profit/Loss'])) best = item;
-                if (!worst || parseFloat(item['Profit/Loss']) < parseFloat(worst['Profit/Loss'])) worst = item;
-            });
-            const sectorMap = {};
-            data.forEach(item => {
-                const sector = item.Sector || 'Unknown';
-                sectorMap[sector] = (sectorMap[sector] || 0) + (parseFloat(item['Current Value ']) || 0);
-            });
-            const topSector = Object.entries(sectorMap).sort((a, b) => b[1] - a[1])[0];
-            return { best, worst, topSector };
-        }
-
-        function calcRiskMetrics(data) {
-            const plValues = data.map(item => {
-                const pl = parseFloat(item['Profit/Loss']);
-                if (isNaN(pl)) console.warn(`Invalid Profit/Loss for ${item.Symbol}: ${item['Profit/Loss']}`);
-                return pl;
-            }).filter(v => !isNaN(v));
-
-            let hasInvalidCV = false;
-            const cvValues = data.map(item => {
-                const cv = parseFloat(item['Current Value ']);
-                if (isNaN(cv)) {
-                    console.warn(`Invalid Current Value for ${item.Symbol}: ${item['Current Value ']}`);
-                    hasInvalidCV = true;
-                    return 10000;
-                }
-                return cv;
-            });
-            const totalValue = cvValues.reduce((sum, cv) => sum + cv, 0);
-
-            let volatility = 0, beta = 0, volatilityCalc = '', betaCalc = '';
-
-            if (plValues.length === 0) {
-                console.warn(`Cannot calculate risk metrics: No valid Profit/Loss entries`);
-                volatilityCalc = `Error: No valid Profit/Loss entries found. Please ensure 'Profit/Loss' in your Google Sheet contains numeric values (e.g., 5000).`;
-                betaCalc = volatilityCalc;
-            } else {
-                const meanPL = plValues.reduce((sum, val) => sum + val, 0) / plValues.length;
-
-                if (plValues.length >= 2) {
-                    const variance = plValues.reduce((sum, val) => sum + Math.pow(val - meanPL, 2), 0) / plValues.length;
-                    const stdDev = Math.sqrt(variance);
-                    volatility = (stdDev / totalValue * 100) || 0;
-                    volatilityCalc = `Volatility = (StdDev of P/L: ₹${stdDev.toFixed(2)} / Total Value: ₹${totalValue.toFixed(2)}) × 100 = ${volatility.toFixed(2)}%; low volatility means your portfolio has minimal price swings, indicating low risk.`;
-                    if (hasInvalidCV) {
-                        volatilityCalc += `<br><strong>Warning:</strong> 'Current Value ' contains 'N/A'. Using fallback value of ₹10,000 per stock. Please update your Google Sheet with numeric values (e.g., 10000).`;
-                    }
-                } else {
-                    volatilityCalc = `Volatility = 0%; only one P/L entry (${formatINR(plValues[0])}), so no variability to measure, assuming low risk.`;
-                    if (hasInvalidCV) {
-                        volatilityCalc += `<br><strong>Warning:</strong> 'Current Value ' contains 'N/A'. Using fallback value of ₹10,000 per stock. Please update your Google Sheet with numeric values (e.g., 10000).`;
-                    }
-                }
-
-                beta = (Math.abs(meanPL) / totalValue * 10) || 0;
-                betaCalc = `Beta = (|Mean P/L: ₹${meanPL.toFixed(2)}| / Total Value: ₹${totalValue.toFixed(2)}) × 10 = ${beta.toFixed(2)}; a low beta means your portfolio is less volatile than the market.`;
-                if (hasInvalidCV) {
-                    betaCalc += `<br><strong>Warning:</strong> 'Current Value ' contains 'N/A'. Using fallback value of ₹10,000 per stock. Please update your Google Sheet with numeric values (e.g., 10000).`;
-                }
-            }
-
-            return {
-                volatility: volatility.toFixed(2),
-                beta: beta.toFixed(2),
-                volatilityCalc,
-                betaCalc,
-                hasInvalidCV
-            };
-        }
-
-        function renderTopMetrics(totalInvested, totalValue, totalPL) {
-            document.getElementById('topMetrics').innerHTML = `
-            <div class="metric-card bg-white rounded-lg p-6 flex flex-col items-center">
-                <span class="text-gray-500">Total Invested Value</span>
-                <span class="text-2xl font-bold mt-2">${formatINR(totalInvested)}</span>
-            </div>
-            <div class="metric-card bg-white rounded-lg p-6 flex flex-col items-center">
-                <span class="text-gray-500">Total Portfolio Value</span>
-                <span class="text-2xl font-bold mt-2">${formatINR(totalValue)}</span>
-            </div>
-            <div class="metric-card bg-white rounded-lg p-6 flex flex-col items-center ${getPLClass(totalPL)}">
-                <span class="text-gray-500">Total Profit/Loss</span>
-                <span class="text-2xl font-bold mt-2">${formatINR(totalPL)}</span>
-            </div>
-        `;
-        }
-
-        function renderRiskMetrics(volatility, beta, volatilityCalc, betaCalc, hasInvalidCV) {
-            const warning = hasInvalidCV
-                ? `<div class="text-red-600 text-sm mt-2">Warning: Invalid data in 'Current Value '. Using fallback values. Check Google Sheet.</div>`
-                : '';
-            document.getElementById('riskMetrics').innerHTML = `
-            <div class="metric-card bg-white rounded-lg p-6 flex flex-col items-center">
-                <span class="text-gray-500">Portfolio Volatility</span>
-                <span class="text-2xl font-bold mt-2">${volatility}%</span>
-                <span class="text-sm text-gray-400">${volatility < 10 ? 'Low' : volatility < 20 ? 'Moderate' : 'High'} Risk</span>
-                ${warning}
-                <div class="tooltip">${volatilityCalc}</div>
-            </div>
-            <div class="metric-card bg-white rounded-lg p-6 flex flex-col items-center">
-                <span class="text-gray-500">Portfolio Beta</span>
-                <span class="text-2xl font-bold mt-2">${beta}</span>
-                <span class="text-sm text-gray-400">${beta < 1 ? 'Less Volatile' : 'More Volatile'} than Market</span>
-                ${warning}
-                <div class="tooltip">${betaCalc}</div>
-            </div>
-        `;
-        }
-
-        function renderInvestmentsTable(data, sectorFilter = '', sortAsc = true) {
-            let filteredData = data;
-            if (sectorFilter) {
-                filteredData = data.filter(item => (item['Sector '] || 'Unknown') === sectorFilter);
-            }
-            filteredData = filteredData.sort((a, b) => {
-                const valA = parseFloat(a['Profit/Loss']) || 0;
-                const valB = parseFloat(b['Profit/Loss']) || 0;
-                return sortAsc ? valA - valB : valB - valA;
-            });
-            document.getElementById('investmentsTable').innerHTML = `
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="p-2">Symbol</th>
-                        <th class="p-2">Buy Price</th>
-                        <th class="p-2">Current Price</th>
-                        <th class="p-2">Quantity</th>
-                        <th class="p-2">Total Investment</th>
-                        <th class="p-2">Current Value</th>
-                        <th class="p-2">Profit/Loss</th>
-                        <th class="p-2">Sector</th>
-                        <th class="p-2">Date</th>
-                    </tr>
-                </thead>
-                <tbody id="investmentsBody">
-                    ${filteredData.map(item => {
-                const buyPrice = Number(item['Buy Price ']);
-                const currentPrice = Number(item['Current Price']);
-                const quantity = item['Quantity'] !== undefined && item['Quantity'] !== '' ? item['Quantity'] : '';
-                const totalInvestment = Number(item['Total Investment']);
-                const currentValue = Number(item['Current Value ']);
-                const profitLoss = Number(item['Profit/Loss']);
-                return `
-                            <tr>
-                                <td class="p-2">${item.Symbol || ''}</td>
-                                <td class="p-2">${!isNaN(buyPrice) && buyPrice !== 0 ? formatINR(buyPrice) : ''}</td>
-                                <td class="p-2">${!isNaN(currentPrice) && currentPrice !== 0 ? formatINR(currentPrice) : ''}</td>
-                                <td class="p-2">${quantity}</td>
-                                <td class="p-2">${!isNaN(totalInvestment) && totalInvestment !== 0 ? formatINR(totalInvestment) : ''}</td>
-                                <td class="p-2">${!isNaN(currentValue) && currentValue !== 0 ? formatINR(currentValue) : ''}</td>
-                                <td class="p-2 ${getPLClass(profitLoss)}">${!isNaN(profitLoss) && profitLoss !== 0 ? formatINR(profitLoss) : ''}</td>
-                                <td class="p-2">${item['Sector '] || ''}</td>
-                                <td class="p-2">${item.Date || ''}</td>
-                            </tr>
-                        `;
-            }).join('')}
-                </tbody>
-            `;
-        }
-
-        function populateSectorFilter(data) {
-            const sectors = [...new Set(data.map(item => item['Sector '] || 'Unknown'))];
-            const select = document.getElementById('sectorFilter');
-            select.innerHTML = '<option value="">All Sectors</option>' +
-                sectors.map(sector => `<option value="${sector}">${sector}</option>`).join('');
-        }
-
-        function renderInsights(insights) {
-            document.getElementById('insights').innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white rounded-lg p-4">
-                    <div class="text-gray-500 mb-1">Best Performer</div>
-                    <div class="font-bold">${insights.best.Symbol}</div>
-                    <div class="text-green-700">${formatINR(insights.best['Profit/Loss'])}</div>
-                </div>
-                <div class="bg-white rounded-lg p-4">
-                    <div class="text-gray-500 mb-1">Worst Performer</div>
-                    <div class="font-bold">${insights.worst.Symbol}</div>
-                    <div class="text-red-700">${formatINR(insights.worst['Profit/Loss'])}</div>
-                </div>
-                <div class="bg-white rounded-lg p-4">
-                    <div class="text-gray-500 mb-1">Top Sector</div>
-                    <div class="font-bold">${insights.topSector[0]}</div>
-                    <div class="text-blue-700">${formatINR(insights.topSector[1])}</div>
-                </div>
-            </div>
-        `;
-        }
-
-        function renderStockPerformanceChart(data) {
-            const ctx = document.getElementById('stockPerformanceChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.map(i => i.Symbol),
-                    datasets: [{
-                        label: 'Profit/Loss',
-                        data: data.map(i => i['Profit/Loss']),
-                        backgroundColor: data.map(i => parseFloat(i['Profit/Loss']) >= 0 ? '#34d399' : '#f87171'),
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { callback: v => formatINR(v) } }
-                    }
-                }
-            });
-        }
-
-        function renderSectorChart(data) {
-            const ctx = document.getElementById('sectorChart').getContext('2d');
-            const sectorMap = {};
-            data.forEach(item => {
-                const sector = item['Sector '] || 'Unknown';
-                const currentValue = Number(item['Current Value ']) || 0;
-                sectorMap[sector] = (sectorMap[sector] || 0) + currentValue;
-            });
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(sectorMap),
-                    datasets: [{
-                        data: Object.values(sectorMap),
-                        backgroundColor: ['#60a5fa', '#fbbf24', '#34d399', '#f87171', '#a78bfa', '#f472b6', '#facc15'],
-                    }]
-                },
-                options: {
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
-        }
-
-        async function main() {
-            try {
-                const data = await fetchPortfolio();
-                const summary = data[0];
-                const rows = data;
-                const totalInvested = Number(summary['Total Invested Value ']) || 0;
-                const totalValue = Number(summary['Total Portfolio Value ']) || 0;
-                const totalPL = Number(summary['Total Profit/Loss']) || 0;
-                renderTopMetrics(totalInvested, totalValue, totalPL);
-
-                const riskMetrics = calcRiskMetrics(rows);
-                renderRiskMetrics(riskMetrics.volatility, riskMetrics.beta, riskMetrics.volatilityCalc, riskMetrics.betaCalc, riskMetrics.hasInvalidCV);
-
-                renderInvestmentsTable(rows);
-                populateSectorFilter(rows);
-                renderStockPerformanceChart(rows);
-                renderSectorChart(rows);
-                renderInsights(calcInsights(rows));
-
-                // Render React Component
-                const root = ReactDOM.createRoot(document.getElementById('stockAnalysisReact'));
-                root.render(<StockAnalysis data={rows} />);
-
-                let sortAsc = true;
-                document.getElementById('sectorFilter').addEventListener('change', (e) => {
-                    renderInvestmentsTable(rows, e.target.value, sortAsc);
-                });
-                document.getElementById('sortProfitLoss').addEventListener('click', () => {
-                    sortAsc = !sortAsc;
-                    renderInvestmentsTable(rows, document.getElementById('sectorFilter').value, sortAsc);
-                    document.getElementById('sortProfitLoss').textContent = `Sort by Profit/Loss (${sortAsc ? 'Asc' : 'Desc'})`;
-                });
-            } catch (e) {
-                document.body.innerHTML = `<div class='text-center text-red-600 mt-20'>Failed to load portfolio data.<br>${e.message}</div>`;
-            }
-        }
-        main();
-
-        // Dark Mode Toggle
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const darkIcon = document.getElementById('darkIcon');
-        const lightIcon = document.getElementById('lightIcon');
-        function setDarkMode(enabled) {
-            if (enabled) {
-                document.body.classList.add('dark-mode');
-                darkIcon.classList.add('hidden');
-                lightIcon.classList.remove('hidden');
-            } else {
-                document.body.classList.remove('dark-mode');
-                darkIcon.classList.remove('hidden');
-                lightIcon.classList.add('hidden');
-            }
-            Chart.helpers.each(Chart.instances, function (instance) {
-                if (instance.options && instance.options.plugins && instance.options.plugins.legend) {
-                    instance.options.plugins.legend.labels.color = enabled ? '#e0e7ef' : '#1f2937';
-                }
-                if (instance.options && instance.options.scales) {
-                    Object.values(instance.options.scales).forEach(scale => {
-                        if (scale.ticks) scale.ticks.color = enabled ? '#e0e7ef' : '#1f2937';
-                    });
-                }
-                instance.update();
-            });
-        }
-        darkModeToggle.addEventListener('click', () => {
-            const enabled = !document.body.classList.contains('dark-mode');
-            setDarkMode(enabled);
-            localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
-        });
-        if (localStorage.getItem('darkMode') === 'enabled') {
-            setDarkMode(true);
-        }
-    </script>
+  // J: Share of all positive P&L generated by the largest winning holding.
+  const winners=rows.filter(r=>r.pl>0).sort((a,b)=>b.pl-a.pl);
+  const grossGains=winners.reduce((s,r)=>s+r.pl,0);
+  const topGain=winners[0];
+  const gainShare=grossGains&&topGain?topGain.pl/grossGains*100:0;
+  const top3GainShare=grossGains?winners.slice(0,3).reduce((s,r)=>s+r.pl,0)/grossGains*100:0;
+  setText('gainConcentration',topGain?`${gainShare.toFixed(1)}% from ${topGain.name}`:'—');
+  setText('gainConcentrationNote',topGain?`Top three winners produce ${top3GainShare.toFixed(1)}% of gross gains.`:'No profitable holdings currently.');
+}
+function rangePosition(r){
+  if(!r.low52||!r.high52||r.high52<=r.low52)return null;
+  return Math.max(0,Math.min(100,(r.price-r.low52)/(r.high52-r.low52)*100));
+}
+function rangeHTML(r){
+  const p=rangePosition(r);
+  if(p===null)return '<span class="muted">Not available</span>';
+  const segments=Array.from({length:5},(_,i)=>{
+    const fill=Math.max(0,Math.min(100,p-i*20))*5;
+    return `<span class="range-segment"><i class="range-segment-fill" style="display:block;width:${fill}%"></i></span>`;
+  }).join('');
+  return `<div class="range" title="Current: ${money(r.price)} · Position: ${p.toFixed(1)} out of 100"><div class="range-track">${segments}<i class="range-dot" style="left:${p}%"></i></div><div class="range-meta"><span class="range-labels"><span>${compact(r.low52)}</span><span>${compact(r.high52)}</span></span><span class="range-score">${p.toFixed(1)}/100</span></div></div>`;
+}
+function renderTable(){
+  const q=$('searchInput').value.toLowerCase().trim(),sector=$('sectorFilter').value;
+  let rows=state.rows.filter(r=>(!sector||r.sector===sector)&&(`${r.symbol} ${r.thought} ${r.sector} ${r.outlook}`.toLowerCase().includes(q)));
+  rows=rows.map(r=>({...r,rangeScore:rangePosition(r)??-1}));
+  const key=state.sortKey,dir=state.sortDirection==='asc'?1:-1;
+  rows.sort((a,b)=>{const av=a[key],bv=b[key];if(typeof av==='string'||typeof bv==='string')return String(av??'').localeCompare(String(bv??''),undefined,{numeric:true,sensitivity:'base'})*dir;return ((Number(av)||0)-(Number(bv)||0))*dir});
+  state.filtered=rows;
+  document.querySelectorAll('.sort-btn').forEach(btn=>{const active=btn.dataset.sort===key;btn.classList.toggle('active',active);btn.querySelector('.sort-icon').textContent=active?(state.sortDirection==='asc'?'↑':'↓'):'↕'});
+  $('rowSummary').textContent=`Showing ${rows.length} of ${state.rows.length} holdings`;
+  $('holdingsBody').innerHTML=rows.length?rows.map(r=>`<tr><td><div class="symbol">${r.name}</div><div class="company-note" title="${escapeHtml(r.thought)}">${escapeHtml(r.thought)||r.sector}</div></td><td>${r.quantity}</td><td>${money(r.buy)}</td><td><strong>${money(r.price)}</strong></td><td><strong>${money(r.value)}</strong></td><td class="${r.pl>=0?'positive':'negative'}"><strong>${r.pl>=0?'+':''}${money(r.pl)}</strong><div style="font-size:11px">${r.returnPct>=0?'+':''}${r.returnPct.toFixed(1)}%</div></td><td class="${r.dayPct>=0?'positive':'negative'}">${r.dayPct?`${r.dayPct>=0?'+':''}${r.dayPct.toFixed(2)}%`:'—'}</td><td><span class="pill">${escapeHtml(r.outlook)}</span></td><td>${rangeHTML(r)}</td></tr>`).join(''):'<tr><td colspan="9" class="empty">No holdings match your filters.</td></tr>';
+}
+function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function chartColors(){return getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()}
+function renderCharts(rows){
+  if(!window.Chart)return setTimeout(()=>renderCharts(rows),100);
+  Object.values(state.charts).forEach(c=>c.destroy());const text=chartColors();
+  const perf=[...rows].sort((a,b)=>b.pl-a.pl);
+  state.charts.performance=new Chart($('performanceChart'),{type:'bar',data:{labels:perf.map(r=>r.name),datasets:[{data:perf.map(r=>r.pl),backgroundColor:perf.map(r=>r.pl>=0?'#10b981':'#f43f5e'),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>money(c.raw)}}},scales:{x:{grid:{color:'rgba(148,163,184,.14)'},ticks:{color:text,callback:v=>compact(v)}},y:{grid:{display:false},ticks:{color:text}}}}});
+  const map={};rows.forEach(r=>map[r.sector]=(map[r.sector]||0)+r.value);const sd=Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  state.charts.sector=new Chart($('sectorChart'),{type:'doughnut',data:{labels:sd.map(x=>x[0]),datasets:[{data:sd.map(x=>x[1]),backgroundColor:['#4f46e5','#14b8a6','#f59e0b','#ec4899','#38bdf8','#a78bfa','#84cc16','#f97316'],borderWidth:0,spacing:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:text,usePointStyle:true,boxWidth:8,padding:14}},tooltip:{callbacks:{label:c=>`${c.label}: ${money(c.raw)}`}}}}});
+}
+function populateFilters(rows){const sectors=[...new Set(rows.map(r=>r.sector))].sort();$('sectorFilter').innerHTML='<option value="">All sectors</option>'+sectors.map(s=>`<option>${escapeHtml(s)}</option>`).join('')}
+async function fetchPortfolioPayload(){
+  const urls=[SHEET_URL,`${SHEET_URL}?refresh=${Date.now()}`];
+  let lastError;
+  for(const url of urls){
+    try{
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),15000);
+      const res=await fetch(url,{method:'GET',redirect:'follow',cache:'no-store',signal:controller.signal});
+      clearTimeout(timer);
+      if(!res.ok)throw new Error(`Request failed (${res.status})`);
+      const raw=await res.text();
+      try{return JSON.parse(raw)}catch(e){throw new Error('Apps Script returned a page instead of JSON. Check that the /exec deployment is public.')}
+    }catch(err){lastError=err}
+  }
+  throw lastError||new Error('The live data request failed.');
+}
+function renderDashboard(payload,sourceLabel='Google Sheets connected'){
+  const rows=normalizePayload(payload);
+  if(!rows.length)throw new Error('The Apps Script response did not contain portfolio rows.');
+  state.rows=rows;state.filtered=rows;
+  renderKPIs(rows);populateFilters(rows);renderTable();
+  try{renderCharts(rows)}catch(chartError){console.error('Chart rendering error:',chartError)}
+  $('connectionStatus').textContent=sourceLabel;
+  $('updated').textContent=`Updated ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+}
+async function loadData(){
+  $('connectionStatus').textContent='Connecting to Google Sheets…';$('refreshBtn').textContent='↻';$('refreshBtn').disabled=true;
+  try{
+    const payload=await fetchPortfolioPayload();
+    localStorage.setItem('portfolio-last-data',JSON.stringify(payload));
+    renderDashboard(payload);
+  }catch(err){
+    console.error('Portfolio loading error:',err);
+    const cached=localStorage.getItem('portfolio-last-data');
+    if(cached){
+      try{renderDashboard(JSON.parse(cached),'Showing last saved data · live refresh failed');return}catch(cacheError){console.error(cacheError)}
+    }
+    $('connectionStatus').textContent='Unable to load live data';
+    $('holdingsBody').innerHTML=`<tr><td colspan="9" class="error"><strong>Could not load portfolio data.</strong><br>${escapeHtml(err.name==='AbortError'?'The Apps Script request timed out.':err.message)}<br><small>If this file was opened directly from Downloads, run it through a local web server or upload it to GitHub Pages. The Apps Script /exec deployment must allow Anyone.</small></td></tr>`;
+    ['totalValue','totalInvested','totalPL','portfolioReturn','dayMoveValue','weightedPE','largestHolding','closestHigh','closestLow'].forEach(id=>setText(id,'—'));
+  }finally{$('refreshBtn').textContent='↻';$('refreshBtn').disabled=false}
+}
+function exportCSV(){const headers=['Symbol','Sector','Quantity','Buy Price','Current Price','Invested','Current Value','Profit/Loss','Return %','Outlook'];const lines=[headers,...state.filtered.map(r=>[r.symbol,r.sector,r.quantity,r.buy,r.price,r.invested,r.value,r.pl,r.returnPct.toFixed(2),r.outlook])].map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`portfolio-${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(a.href)}
+function setGreeting(){const h=new Date().getHours();$('greeting').textContent=`Good ${h<12?'morning':h<17?'afternoon':'evening'}, Viom`}
+$('refreshBtn').addEventListener('click',loadData);$('exportBtn').addEventListener('click',exportCSV);['searchInput','sectorFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',renderTable));document.querySelectorAll('.sort-btn').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.sort;if(state.sortKey===key){state.sortDirection=state.sortDirection==='desc'?'asc':'desc'}else{state.sortKey=key;state.sortDirection=key==='name'||key==='outlook'?'asc':'desc'}renderTable()}));$('themeBtn').addEventListener('click',()=>{const dark=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=dark?'dark':'light';localStorage.setItem('portfolio-theme',dark?'dark':'light');if(state.rows.length){try{renderCharts(state.rows)}catch(e){console.error('Chart rendering error:',e)}}});document.documentElement.dataset.theme=localStorage.getItem('portfolio-theme')||'light';setGreeting();loadData();
+</script>
 </body>
-
 </html>
